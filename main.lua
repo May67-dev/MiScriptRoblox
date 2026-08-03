@@ -289,38 +289,203 @@ local SeccionJuegos = Window:Section({
 })
 
 -- ==========================================
--- HACK A BUSINESS - DEBUG (MOVIL)
+-- HACK A BUSINESS
 -- ==========================================
-local HABTab = Window:Tab({Title = "HAB Debug", Icon = "solar:computer-bold"})
-local DebugSection = HABTab:Section({Title = "🔍 Nombres Reales", Box = true, BoxBorder = true})
+local HABTab = SeccionJuegos:Tab({
+    Title = "Hack A Business",
+    Icon = "solar:computer-bold"
+})
 
-DebugSection:Button({Title = "Listar Workspace", Callback = function()
-    local l = {"WORKSPACE:"}
-    for _, o in ipairs(game.Workspace:GetChildren()) do table.insert(l, "- " .. o.Name) end
-    WindUI:Notify({Title = "HAB", Content = table.concat(l, char(10))})
-end})
+-- Debug Section
+local DebugSection = HABTab:Section({
+    Title = "Debug",
+    Box = true,
+    BoxBorder = true
+})
 
-DebugSection:Button({Title = "Listar ReplicatedStorage", Callback = function()
-    local l = {"ReplicatedStorage:"}
-    for _, o in ipairs(game.ReplicatedStorage:GetChildren()) do table.insert(l, "- " .. o.Name) end
-    WindUI:Notify({Title = "HAB", Content = table.concat(l, char(10))})
-end})
+DebugSection:Button({
+    Title = "Listar Workspace",
+    Callback = function()
+        local l = {}
+        table.insert(l, "WORKSPACE:")
+        for _, o in ipairs(game.Workspace:GetChildren()) do
+            table.insert(l, "- " .. o.Name)
+        end
+        local contenido = table.concat(l, string.char(10))
+        WindUI:Notify({
+            Title = "HAB",
+            Content = contenido
+        })
+    end
+})
 
-DebugSection:Button({Title = "Buscar Objetos", Callback = function()
-    local l = {"OBJETOS:"}
-    for _, o in ipairs(game.Workspace:GetDescendants()) do
-        local n = o.Name:lower()
-        if n:find("data") or n:find("server") or n:find("antenna") or n:find("base") or n:find("sell") or n:find("collect") then
-            table.insert(l, "+ " .. o.Name)
+DebugSection:Button({
+    Title = "Listar ReplicatedStorage",
+    Callback = function()
+        local l = {}
+        table.insert(l, "ReplicatedStorage:")
+        for _, o in ipairs(game.ReplicatedStorage:GetChildren()) do
+            table.insert(l, "- " .. o.Name)
+        end
+        local contenido = table.concat(l, string.char(10))
+        WindUI:Notify({
+            Title = "HAB",
+            Content = contenido
+        })
+    end
+})
+
+DebugSection:Button({
+    Title = "Buscar Objetos",
+    Callback = function()
+        local l = {}
+        table.insert(l, "OBJETOS:")
+        for _, o in ipairs(game.Workspace:GetDescendants()) do
+            local n = o.Name:lower()
+            if n:find("data") or n:find("server") or n:find("antenna") or n:find("base") or n:find("sell") or n:find("collect") then
+                table.insert(l, "+ " .. o.Name)
+            end
+        end
+        local contenido = table.concat(l, string.char(10))
+        WindUI:Notify({
+            Title = "HAB",
+            Content = contenido
+        })
+    end
+})
+
+DebugSection:Button({
+    Title = "Buscar Remotes",
+    Callback = function()
+        local l = {}
+        table.insert(l, "REMOTES:")
+        for _, o in ipairs(game.ReplicatedStorage:GetDescendants()) do
+            if o:IsA("RemoteEvent") or o:IsA("RemoteFunction") then
+                table.insert(l, "- " .. o.Name)
+            end
+        end
+        local contenido = table.concat(l, string.char(10))
+        WindUI:Notify({
+            Title = "HAB",
+            Content = contenido
+        })
+    end
+})
+
+-- Auto Section
+local AutoSection = HABTab:Section({
+    Title = "Auto",
+    Box = true,
+    BoxBorder = true
+})
+
+local AutoCollect = false
+local AutoSteal = false
+local SellBest = false
+
+AutoSection:Toggle({
+    Title = "Auto Collect",
+    Callback = function(state)
+        AutoCollect = state
+    end
+})
+
+AutoSection:Toggle({
+    Title = "Auto Steal",
+    Callback = function(state)
+        AutoSteal = state
+    end
+})
+
+AutoSection:Toggle({
+    Title = "Sell Best Zone",
+    Callback = function(state)
+        SellBest = state
+    end
+})
+
+-- Main Loop
+task.spawn(function()
+    local LP = game.Players.LocalPlayer
+    local RS = game.ReplicatedStorage
+    local WS = game.Workspace
+    
+    while true do
+        local Char = LP.Character
+        local Root = Char and Char:FindFirstChild("HumanoidRootPart")
+        
+        if Root and Char then
+            if AutoCollect then
+                for _, obj in ipairs(WS:GetDescendants()) do
+                    if obj.Name:lower():find("data") or obj.Name:lower():find("server") then
+                        local cf = obj.CFrame or obj:GetPivot()
+                        if cf then
+                            Root.CFrame = cf * CFrame.new(0, 3, 0)
+                        end
+                    end
+                end
+            end
+            
+            if AutoSteal then
+                local rem = RS:FindFirstChild("Steal") or RS:FindFirstChild("Hack") or RS:FindFirstChild("Rob")
+                if rem then
+                    for _, obj in ipairs(WS:GetDescendants()) do
+                        if obj.Name:lower():find("antenna") or obj.Name:lower():find("base") then
+                            pcall(function() rem:FireServer(obj) end)
+                        end
+                    end
+                end
+            end
+            
+            if SellBest then
+                local rem = RS:FindFirstChild("Sell") or RS:FindFirstChild("Drop")
+                if rem then
+                    pcall(function() rem:FireServer() end)
+                end
+            end
+        end
+        
+        task.wait(0.3)
+    end
+end)
+
+-- Utilities
+local UtilSection = HABTab:Section({
+    Title = "Utilidades",
+    Box = true,
+    BoxBorder = true
+})
+
+UtilSection:Slider({
+    Title = "WalkSpeed",
+    Step = 1,
+    Value = {
+        Min = 16,
+        Max = 500,
+        Default = 16
+    },
+    Callback = function(v)
+        local Char = LP.Character or LP.CharacterAdded:Wait()
+        local Hum = Char:FindFirstChildOfClass("Humanoid")
+        if Hum then
+            Hum.WalkSpeed = v
         end
     end
-    WindUI:Notify({Title = "HAB", Content = table.concat(l, char(10))})
-end})
+})
 
-DebugSection:Button({Title = "Buscar Remotes", Callback = function()
-    local l = {"REMOTES:"}
-    for _, o in ipairs(game.ReplicatedStorage:GetDescendants()) do
-        if o:IsA("RemoteEvent") or o:IsA("RemoteFunction") then table.insert(l, "- " .. o.Name) end
+UtilSection:Slider({
+    Title = "JumpPower",
+    Step = 1,
+    Value = {
+        Min = 50,
+        Max = 500,
+        Default = 50
+    },
+    Callback = function(v)
+        local Char = LP.Character or LP.CharacterAdded:Wait()
+        local Hum = Char:FindFirstChildOfClass("Humanoid")
+        if Hum then
+            Hum.JumpPower = v
+        end
     end
-    WindUI:Notify({Title = "HAB", Content = table.concat(l, char(10))})
-end})
+})
