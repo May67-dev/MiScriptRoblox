@@ -32,11 +32,11 @@ local SeccionSistema = Window:Section({
 })
 
 -- ==========================================
--- 3. PESTAÑA: INICIO (Rediseño Profesional)
+-- 3. PESTAÑA: INICIO (DISEÑO BENTO BOX FUTURISTA)
 -- ==========================================
 local HomeTab = SeccionHome:Tab({
-    Title = "Inicio",
-    Icon = "solar:home-2-bold"
+    Title = "Dashboard",
+    Icon = "solar:widget-bold"
 })
 
 -- OBTENCIÓN DE DATOS DEL JUEGO Y SERVIDOR
@@ -45,62 +45,58 @@ local infoJuego = MarketplaceService:GetProductInfo(game.PlaceId)
 local nombreJuego = infoJuego.Name or "Juego Desconocido"
 local maxJugadores = game.Players.MaxPlayers
 local jugadoresActuales = #game.Players:GetPlayers()
+local userId = game.Players.LocalPlayer.UserId
 
--- --- SECCIÓN 1: PERFIL DEL JUGADOR ---
-local PerfilSection = HomeTab:Section({
-    Title = "PERFIL DEL USUARIO"
+-- --- TARJETA 1: PERFIL DEL JUGADOR (MORADO) ---
+local CardPerfil = HomeTab:Section({
+    Title = "👤 PERFIL DEL USUARIO",
+    Box = true,
+    BoxBorder = true
 })
 
--- Intentamos la foto una última vez con un método de respaldo
-local userId = game.Players.LocalPlayer.UserId
-local fotoUrl = "https://www.roblox.com/headshot-thumbnail/image?userId="..userId.."&width=420&height=420&format=png"
-
-PerfilSection:Image({
-    Image = fotoUrl,
+CardPerfil:Image({
+    Image = "rbxthumb://type=AvatarHeadShot&id=" .. userId .. "&w=420&h=420",
     AspectRatio = "1:1",
     Radius = 100
 })
 
-PerfilSection:Section({
-    Title = "👤 Usuario: " .. game.Players.LocalPlayer.Name
+CardPerfil:Label({
+    Title = "Usuario: " .. game.Players.LocalPlayer.Name,
+    Desc = "ID: " .. userId
 })
 
-PerfilSection:Section({
-    Title = "🏷️ Apodo: " .. game.Players.LocalPlayer.DisplayName
+CardPerfil:Label({
+    Title = "Apodo: " .. game.Players.LocalPlayer.DisplayName,
+    Desc = "Antigüedad: " .. game.Players.LocalPlayer.AccountAge .. " días"
 })
 
-PerfilSection:Section({
-    Title = "📅 Antigüedad: " .. game.Players.LocalPlayer.AccountAge .. " días"
+-- --- TARJETA 2: DATOS DEL JUEGO (AZUL) ---
+local CardJuego = HomeTab:Section({
+    Title = "🎮 INFORMACIÓN DEL JUEGO",
+    Box = true,
+    BoxBorder = true
 })
 
--- --- SECCIÓN 2: DATOS DEL JUEGO ---
-local GameSection = HomeTab:Section({
-    Title = "INFORMACIÓN DEL JUEGO"
+CardJuego:Label({
+    Title = "Jugando a: " .. nombreJuego,
+    Desc = "Place ID: " .. game.PlaceId
 })
 
-GameSection:Section({
-    Title = "🎮 Jugando a: " .. nombreJuego
+CardJuego:Label({
+    Title = "Estado del Servidor",
+    Desc = "👥 " .. jugadoresActuales .. " / " .. maxJugadores .. " Jugadores activos"
 })
 
-GameSection:Section({
-    Title = "🆔 Place ID: " .. game.PlaceId
+-- --- TARJETA 3: ESTADO DE SESIÓN (FUTURISTA) ---
+local CardSesion = HomeTab:Section({
+    Title = "⚡ ESTADO DE SESIÓN",
+    Box = true,
+    BoxBorder = true
 })
 
-GameSection:Section({
-    Title = "👥 Servidor: " .. jugadoresActuales .. " / " .. maxJugadores .. " jugadores"
-})
-
--- --- SECCIÓN 3: ESTADO DE SESIÓN ---
-local StatusSection = HomeTab:Section({
-    Title = "ESTADO DE SESIÓN"
-})
-
-local TimeLabel = StatusSection:Section({
-    Title = "⏳ Tiempo activo: 0h 0m 0s"
-})
-
-StatusSection:Section({
-    Title = "✅ Hub Status: Operacional"
+local TimeLabel = CardSesion:Label({
+    Title = "⏳ Tiempo activo: 0h 0m 0s",
+    Desc = "✨ Hub Status: Operacional"
 })
 
 -- Bucle de actualización de tiempo
