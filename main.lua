@@ -107,17 +107,15 @@ CheatTab:Toggle({
     end
 })
 
--- 5. PESTAÑA: VUELO (Fly Inteligente)
+-- 5. PESTAÑA: VUELO (Fly Profesional)
 local FlyTab = SeccionTrampas:Tab({
     Title = "Vuelo",
     Icon = "solar:plain-bold"
 })
 
--- Variables de control para el vuelo
 local VueloActivo = false
 local VelocidadVuelo = 80
 
--- Añadimos un Slider para que puedas cambiar la velocidad de vuelo
 FlyTab:Slider({
     Title = "Velocidad de Vuelo",
     Step = 1,
@@ -131,22 +129,19 @@ FlyTab:Slider({
     end
 })
 
--- Toggle de Vuelo Inteligente
 FlyTab:Toggle({
     Title = "Activar Vuelo",
-    Desc = "Solo te mueves si usas el Joystick",
+    Desc = "Joystick para moverte, Cámara para subir/bajar",
     Callback = function(state)
         VueloActivo = state
         local player = game.Players.LocalPlayer
         local character = player.Character or player.CharacterAdded:Wait()
         local root = character:WaitForChild("HumanoidRootPart")
         local hum = character:WaitForChild("Humanoid")
+        local camera = workspace.CurrentCamera
         
         if VueloActivo then
-            -- Si ya había una fuerza, la borramos para no duplicar
-            if root:FindFirstChild("FlyForce") then
-                root.FlyForce:Destroy()
-            end
+            if root:FindFirstChild("FlyForce") then root.FlyForce:Destroy() end
             
             local bv = Instance.new("BodyVelocity")
             bv.Name = "FlyForce"
@@ -156,19 +151,24 @@ FlyTab:Toggle({
             
             task.spawn(function()
                 while VueloActivo do
-                    -- Detecta si estás moviendo el Joystick del celular
-                    if hum.MoveDirection.Magnitude > 0 then
-                        bv.Velocity = workspace.CurrentCamera.CFrame.LookVector * VelocidadVuelo
+                    local moveDir = hum.MoveDirection
+                    if moveDir.Magnitude > 0 then
+                        -- Calculamos la dirección horizontal de la cámara
+                        local camLook = camera.CFrame.LookVector
+                        local camHorizontal = Vector3.new(camLook.X, 0, camLook.Z).Unit
+                        
+                        -- Detectamos si vas hacia adelante o atrás respecto a la cámara
+                        local forwardAmount = moveDir:Dot(camHorizontal)
+                        
+                        -- Combinamos movimiento del joystick con inclinación de cámara
+                        local finalVelocity = (moveDir + Vector3.new(0, camLook.Y * forwardAmount, 0)).Unit
+                        bv.Velocity = finalVelocity * VelocidadVuelo
                     else
-                        -- Si no tocas el joystick, te quedas flotando en el sitio
                         bv.Velocity = Vector3.new(0, 0, 0)
                     end
                     task.wait()
                 end
-                -- Al apagar, borramos la fuerza para caer al suelo
-                if root:FindFirstChild("FlyForce") then
-                    root.FlyForce:Destroy()
-                end
+                if root:FindFirstChild("FlyForce") then root.FlyForce:Destroy() end
             end)
         end
     end
