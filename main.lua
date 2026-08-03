@@ -282,10 +282,15 @@ SysTab:Button({
 })
 
 -- ==========================================
--- DEBUG UNIVERSAL - CUALQUIER JUEGO
+-- DEBUG UNIVERSAL - CUALQUIER JUEGO (En un Tab separado)
 -- ==========================================
-local DebugSection = SeccionSistema:Section({
-    Title = "Debug - Nombres Reales",
+local DebugTab = SeccionSistema:Tab({
+    Title = "Debug",
+    Icon = "solar:bug-bold"
+})
+
+local DebugSection = DebugTab:Section({
+    Title = "Nombres Reales",
     Box = true,
     BoxBorder = true
 })
@@ -435,15 +440,12 @@ DebugSection:Button({
         end
     end
 })
-
 -- ==========================================
 -- SECCIÓN: JUEGOS
 -- ==========================================
 local SeccionJuegos = Window:Section({
     Title = "JUEGOS"
 })
-
--- ==========================================
 
 -- ==========================================
 -- HACK A BUSINESS
