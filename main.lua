@@ -501,3 +501,249 @@ CardBBTele:Button({
         WindUI:Notify({ Title = "Blade Ball", Content = "Teleport al centro" })
     end
 })
+
+-- ==========================================
+-- JUEGOS DE PRUEBAS
+-- ==========================================
+local SeccionPruebas = Window:Section({
+    Title = "JUEGOS DE PRUEBAS"
+})
+
+local PruebasTab = SeccionPruebas:Tab({
+    Title = "Pruebas",
+    Icon = "solar:test-tube-bold"
+})
+
+PruebasTab:Section({
+    Title = "🧪 Funciones para probar en servidores públicos/privados"
+})
+
+PruebasTab:Section({
+    Title = "Usa una multicuenta para verificar si otros lo ven."
+})
+
+-- ----------------------------------------
+-- ENTORNO
+-- ----------------------------------------
+local CardEntorno = PruebasTab:Section({
+    Title = "🌍 ENTORNO",
+    Box = true,
+    BoxBorder = true
+})
+
+CardEntorno:Button({
+    Title = "Cielo rojo (Atmósfera)",
+    Callback = function()
+        local Atmosphere = workspace:FindFirstChildOfClass("Atmosphere")
+        if not Atmosphere then
+            Atmosphere = Instance.new("Atmosphere")
+            Atmosphere.Parent = workspace
+        end
+        Atmosphere.Color = Color3.fromRGB(255, 50, 50)
+        Atmosphere.GroundColor = Color3.fromRGB(100, 0, 0)
+        Atmosphere.Decay = 0.5
+        Atmosphere.Density = 0.5
+        Atmosphere.Glow = 1
+        WindUI:Notify({ Title = "Pruebas", Content = "Atmósfera roja aplicada" })
+    end
+})
+
+CardEntorno:Button({
+    Title = "Cielo normal",
+    Callback = function()
+        local Atmosphere = workspace:FindFirstChildOfClass("Atmosphere")
+        if Atmosphere then
+            Atmosphere:Destroy()
+        end
+        WindUI:Notify({ Title = "Pruebas", Content = "Atmósfera eliminada" })
+    end
+})
+
+CardEntorno:Slider({
+    Title = "Brillo del entorno (Lighting)",
+    Step = 0.1,
+    Value = {
+        Min = 0,
+        Max = 3,
+        Default = 1
+    },
+    Callback = function(v)
+        local Lighting = game:GetService("Lighting")
+        Lighting.Brightness = v
+        WindUI:Notify({ Title = "Pruebas", Content = ("Brillo: %.1f"):format(v) })
+    end
+})
+
+CardEntorno:Slider({
+    Title = "Densidad de niebla",
+    Step = 0.05,
+    Value = {
+        Min = 0,
+        Max = 1,
+        Default = 0
+    },
+    Callback = function(v)
+        local Lighting = game:GetService("Lighting")
+        Lighting.FogEnd = 10000 * (1 - v) + 100
+        Lighting.FogStart = 0
+        WindUI:Notify({ Title = "Pruebas", Content = ("Niebla: %.2f"):format(v) })
+    end
+})
+
+-- ----------------------------------------
+-- TAMAÑO DE PERSONAJE
+-- ----------------------------------------
+local CardTamano = PruebasTab:Section({
+    Title = "📏 TAMAÑO PERSONAJE",
+    Box = true,
+    BoxBorder = true
+})
+
+local escalaActual = 1
+
+CardTamano:Slider({
+    Title = "Escala de personaje",
+    Step = 0.1,
+    Value = {
+        Min = 0.5,
+        Max = 5,
+        Default = 1
+    },
+    Callback = function(v)
+        escalaActual = v
+        local LP = game.Players.LocalPlayer
+        local Character = LP.Character or LP.CharacterAdded:Wait()
+        local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+        if not Humanoid then return end
+
+        -- HumanoidDescription (lo que suele sincronizarse)
+        local HD = Humanoid:FindFirstChildOfClass("HumanoidDescription")
+        if HD then
+            local nueva = HD:Clone()
+            nueva.Scale = Vector3.new(v, v, v)
+            Humanoid.HumanoidDescription = nueva
+        end
+
+        -- Extra: MeshScale en todas las partes
+        for _, obj in ipairs(Character:GetDescendants()) do
+            if obj:IsA("BasePart") then
+                pcall(function()
+                    obj.MeshScale = Vector3.new(v, v, v)
+                end)
+            end
+        end
+
+        WindUI:Notify({
+            Title = "Pruebas",
+            Content = ("Escala: %.1f"):format(v)
+        })
+    end
+})
+
+CardTamano:Button({
+    Title = "Restaurar tamaño normal",
+    Callback = function()
+        local LP = game.Players.LocalPlayer
+        local Character = LP.Character or LP.CharacterAdded:Wait()
+        local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+        if not Humanoid then return end
+
+        local HD = Humanoid:FindFirstChildOfClass("HumanoidDescription")
+        if HD then
+            local nueva = HD:Clone()
+            nueva.Scale = Vector3.new(1, 1, 1)
+            Humanoid.HumanoidDescription = nueva
+        end
+
+        for _, obj in ipairs(Character:GetDescendants()) do
+            if obj:IsA("BasePart") then
+                pcall(function()
+                    obj.MeshScale = Vector3.new(1, 1, 1)
+                end)
+            end
+        end
+
+        escalaActual = 1
+        WindUI:Notify({ Title = "Pruebas", Content = "Tamaño restaurado" })
+    end
+})
+
+-- ----------------------------------------
+-- COLOR DE PERSONAJE
+-- ----------------------------------------
+local CardColor = PruebasTab:Section({
+    Title = "🎨 COLOR PERSONAJE",
+    Box = true,
+    BoxBorder = true
+})
+
+CardColor:Button({
+    Title = "Personaje rojo brillante",
+    Callback = function()
+        local LP = game.Players.LocalPlayer
+        local Character = LP.Character or LP.CharacterAdded:Wait()
+        for _, obj in ipairs(Character:GetDescendants()) do
+            if obj:IsA("Part") or obj:IsA("MeshPart") then
+                obj.Color = Color3.fromRGB(255, 0, 0)
+                obj.Material = Enum.Material.Neon
+            end
+        end
+        WindUI:Notify({ Title = "Pruebas", Content = "Personaje rojo aplicado" })
+    end
+})
+
+CardColor:Button({
+    Title = "Personaje normal",
+    Callback = function()
+        local LP = game.Players.LocalPlayer
+        local Character = LP.Character or LP.CharacterAdded:Wait()
+        -- No restauramos perfecto, solo quitamos Neon
+        for _, obj in ipairs(Character:GetDescendants()) do
+            if obj:IsA("Part") or obj:IsA("MeshPart") then
+                obj.Material = Enum.Material.Plastic
+            end
+        end
+        WindUI:Notify({ Title = "Pruebas", Content = "Material restaurado" })
+    end
+})
+
+-- ----------------------------------------
+-- EFECTOS EXTRA
+-- ----------------------------------------
+local CardEfectos = PruebasTab:Section({
+    Title = "✨ EFECTOS",
+    Box = true,
+    BoxBorder = true
+})
+
+local conoActivo = false
+CardEfectos:Toggle({
+    Title = "Cono de luz en cabeza",
+    Callback = function(state)
+        conoActivo = state
+        local LP = game.Players.LocalPlayer
+        local Character = LP.Character or LP.CharacterAdded:Wait()
+        local Head = Character:FindFirstChild("Head")
+        if not Head then return end
+
+        local luz = Head:FindFirstChild("PruebaCono")
+        if state then
+            if not luz then
+                luz = Instance.new("SpotLight")
+                luz.Name = "PruebaCono"
+                luz.Parent = Head
+                luz.Color = Color3.fromRGB(0, 255, 0)
+                luz.Brightness = 5
+                luz.Range = 50
+                luz.Angle = 45
+            end
+            luz.Enabled = true
+            WindUI:Notify({ Title = "Pruebas", Content = "Cono de luz activado" })
+        else
+            if luz then
+                luz.Enabled = false
+            end
+            WindUI:Notify({ Title = "Pruebas", Content = "Cono de luz desactivado" })
+        end
+    end
+})
