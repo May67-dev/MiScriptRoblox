@@ -1,38 +1,81 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
 
-local Window = Rayfield:CreateWindow({
-   Name = "Nc Hub",
-   LoadingTitle = "Cargando Script...",
-   LoadingSubtitle = "Nc Hub",
-   ConfigurationSaving = {
-      Enabled = true,
-      FolderName = "MisScripts",
-      FileName = "ConfigPrincipal"
-   },
-   KeySystem = false -- Ponlo en true si quieres ponerle contraseña
+-- */ Configuración de la Ventana /* --
+local Window = WindUI:CreateWindow({
+    Title = "NC HUB", -- TU NOMBRE AQUÍ
+    Author = "By Hidjcjgg",
+    Folder = "May67Scripts",
+    Icon = "solar:home-2-bold", -- Icono moderno
+    Theme = "Dark", -- Puedes probar "Mellowsi" para otro tono
+    OpenButton = {
+        Title = "Abrir Hub",
+        Enabled = true,
+        Draggable = true,
+        OnlyMobile = true -- Solo aparece el botón en celular
+    }
 })
 
--- Pestaña de Información (Igual a la de tu foto)
-local InfoTab = Window:CreateTab("Info", 4483362458) -- Icono de Info
-
-local Section = InfoTab:CreateSection("Discord 🎉")
-
-InfoTab:CreateButton({
-   Name = "Próximamente 👻",
-   Callback = function()
-      -- Aquí pondrías el link
-      print("Link copiado")
-   end,
+-- */ Pestañas /* --
+local MainTab = Window:Tab({
+    Title = "Principal",
+    Icon = "solar:info-square-bold",
+    Border = true,
 })
 
--- Pestaña de Funciones
-local MainTab = Window:CreateTab("Main", 4483362458) -- Icono de Gamepad
-
-MainTab:CreateButton({
-   Name = "Velocidad (Speed) 100",
-   Callback = function()
-      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 100
-   end,
+local PlayerTab = Window:Tab({
+    Title = "Jugador",
+    Icon = "solar:user-bold",
+    Border = true,
 })
 
--- Barra de búsqueda (Rayfield la trae por defecto en las pestañas)
+-- */ Sección de Bienvenida /* --
+local WelcomeSection = MainTab:Section({
+    Title = "Bienvenido, May67",
+})
+
+WelcomeSection:Button({
+    Title = "Cerrar Hub",
+    Desc = "Destruye la interfaz por completo",
+    Callback = function()
+        Window:Destroy()
+    end,
+})
+
+-- */ Sección de Funciones (Jugador) /* --
+local PlayerSection = PlayerTab:Section({
+    Title = "Movimiento",
+})
+
+-- Slider de Velocidad con Animación
+PlayerSection:Slider({
+    Title = "Velocidad",
+    Desc = "Ajusta tu rapidez",
+    Step = 1,
+    Value = {Min = 16, Max = 300, Default = 16},
+    Callback = function(v)
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v
+    end,
+})
+
+-- Toggle de Salto Infinito
+PlayerSection:Toggle({
+    Title = "Salto Infinito",
+    Desc = "Salta sin límites",
+    Callback = function(state)
+        _G.InfJump = state
+    end,
+})
+
+-- Lógica del Salto
+game:GetService("UserInputService").JumpRequest:Connect(function()
+    if _G.InfJump then
+        game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+    end
+end)
+
+-- Notificación al cargar
+WindUI:Notify({
+    Title = "Hub Cargado",
+    Content = "Todo listo para la acción.",
+    Duration = 5
+})
