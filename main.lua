@@ -40,7 +40,7 @@ MovTab:Slider({
     Step = 1,
     Value = {
         Min = 16,
-        Max = 500,
+        Max = 128,
         Default = 16
     },
     Callback = function(v)
@@ -205,24 +205,36 @@ local SysTab = SeccionSistema:Tab({
 })
 
 SysTab:Button({
-    Title = "Activar Anti-AFK",
+    Title = "Activar Anti-AFK (Ultra)",
+    Desc = "Mantiene tu sesión activa siempre",
     Callback = function()
-        local vu = game:GetService("VirtualUser")
-        game.Players.LocalPlayer.Idled:Connect(function()
-            vu:Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
-            task.wait(1)
-            vu:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
+        -- Borramos cualquier conexión previa para no duplicar
+        if _G.AntiAFKConnection then _G.AntiAFKConnection:Disconnect() end
+        
+        -- MÉTODO 1: Bloquear el evento de inactividad
+        _G.AntiAFKConnection = game.Players.LocalPlayer.Idled:Connect(function()
+            local vu = game:GetService("VirtualUser")
+            vu:CaptureController()
+            vu:ClickButton2(Vector2.new())
+            print("Anti-AFK: Movimiento simulado para evitar desconexión.")
         end)
+        
+        -- MÉTODO 2: Pequeño movimiento invisible cada 2 minutos
+        task.spawn(function()
+            while true do
+                task.wait(120) -- Cada 2 minutos
+                local root = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if root then
+                    -- Hace que el personaje "tiemble" un milímetro, invisible para ti
+                    root.CFrame = root.CFrame * CFrame.new(0, 0.0001, 0)
+                end
+            end
+        end)
+
         WindUI:Notify({
             Title = "Sistema",
-            Content = "Anti-AFK Activado"
+            Content = "Anti-AFK Ultra Activado. Puedes dejar el móvil tranquilo.",
+            Duration = 5
         })
-    end
-})
-
-SysTab:Button({
-    Title = "Cerrar Hub",
-    Callback = function()
-        Window:Destroy()
     end
 })
