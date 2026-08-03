@@ -289,7 +289,7 @@ local SeccionJuegos = Window:Section({
 })
 
 -- ==========================================
--- HACK A BUSINESS - DEBUG
+-- HACK A BUSINESS - DEBUG (MÓVIL)
 -- ==========================================
 local HABTab = SeccionJuegos:Tab({
     Title = "Hack A Business",
@@ -305,67 +305,56 @@ local DebugSection = HABTab:Section({
 DebugSection:Button({
     Title = "Listar Workspace",
     Callback = function()
-        print("=== WORKSPACE ===")
+        local lista = "=== WORKSPACE ===
+"
         for _, obj in ipairs(game.Workspace:GetChildren()) do
-            print("• " .. obj.Name .. " [" .. obj.ClassName .. "]")
+            lista = lista .. "• " .. obj.Name .. "
+"
         end
-        print("=== WORKSPACE (DESCENDANTS) ===")
-        for _, obj in ipairs(game.Workspace:GetDescendants()) do
-            print("• " .. obj.Name .. " [" .. obj.ClassName .. "]")
-        end
-        WindUI:Notify({Title = "Hack A Business", Content = "Mira la consola (F9)"})
+        WindUI:Notify({Title = "Hack A Business", Content = lista})
     end
 })
 
 DebugSection:Button({
     Title = "Listar ReplicatedStorage",
     Callback = function()
-        print("=== REPLICATEDSTORAGE ===")
+        local lista = "=== REPLICATEDSTORAGE ===
+"
         for _, obj in ipairs(game.ReplicatedStorage:GetChildren()) do
-            print("• " .. obj.Name .. " [" .. obj.ClassName .. "]")
+            lista = lista .. "• " .. obj.Name .. "
+"
         end
-        print("=== REPLICATEDSTORAGE (DESCENDANTS) ===")
-        for _, obj in ipairs(game.ReplicatedStorage:GetDescendants()) do
-            print("• " .. obj.Name .. " [" .. obj.ClassName .. "]")
-        end
-        WindUI:Notify({Title = "Hack A Business", Content = "Mira la consola (F9)"})
+        WindUI:Notify({Title = "Hack A Business", Content = lista})
     end
 })
 
 DebugSection:Button({
-    Title = "Listar StarterPlayer",
+    Title = "Buscar Data/Server/Antenna",
     Callback = function()
-        print("=== STARTERPLAYER ===")
-        for _, obj in ipairs(game.StarterPlayer:GetChildren()) do
-            print("• " .. obj.Name .. " [" .. obj.ClassName .. "]")
-        end
-        WindUI:Notify({Title = "Hack A Business", Content = "Mira la consola (F9)"})
-    end
-})
-
-DebugSection:Button({
-    Title = "Buscar 'Data' / 'Server'",
-    Callback = function()
-        print("=== BUSCANDO DATA/SERVER ===")
+        local lista = "=== OBJETOS IMPORTANTES ===
+"
         for _, obj in ipairs(game.Workspace:GetDescendants()) do
             local name = obj.Name:lower()
-            if name:find("data") or name:find("server") or name:find("file") or name:find("antenna") or name:find("base") or name:find("plot") or name:find("sell") or name:find("collect") or name:find("steal") or name:find("hack") then
-                print("✓ " .. obj.Name .. " [" .. obj.ClassName .. "]")
+            if name:find("data") or name:find("server") or name:find("file") or name:find("antenna") or name:find("base") or name:find("plot") or name:find("sell") or name:find("collect") or name:find("steal") or name:find("hack") or name:find("buy") or name:find("place") then
+                lista = lista .. "✓ " .. obj.Name .. " [" .. obj.ClassName .. "]
+"
             end
         end
-        WindUI:Notify({Title = "Hack A Business", Content = "Mira la consola (F9)"})
+        WindUI:Notify({Title = "Hack A Business", Content = lista})
     end
 })
 
 DebugSection:Button({
     Title = "Buscar Remotes",
     Callback = function()
-        print("=== BUSCANDO REMOTES ===")
+        local lista = "=== REMOTES ===
+"
         for _, obj in ipairs(game.ReplicatedStorage:GetDescendants()) do
             if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
-                print("REMOTE: " .. obj.Name .. " [" .. obj.ClassName .. "]")
+                lista = lista .. "REMOTE: " .. obj.Name .. "
+"
             end
         end
-        WindUI:Notify({Title = "Hack A Business", Content = "Mira la consola (F9)"})
+        WindUI:Notify({Title = "Hack A Business", Content = lista})
     end
 })
