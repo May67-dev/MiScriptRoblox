@@ -316,6 +316,11 @@ DebugSection:Button({
             Title = "HAB",
             Content = contenido
         })
+        setclipboard(contenido)
+        WindUI:Notify({
+            Title = "HAB",
+            Content = "Copiado al portapapeles!"
+        })
     end
 })
 
@@ -331,6 +336,11 @@ DebugSection:Button({
         WindUI:Notify({
             Title = "HAB",
             Content = contenido
+        })
+        setclipboard(contenido)
+        WindUI:Notify({
+            Title = "HAB",
+            Content = "Copiado al portapapeles!"
         })
     end
 })
@@ -351,6 +361,11 @@ DebugSection:Button({
             Title = "HAB",
             Content = contenido
         })
+        setclipboard(contenido)
+        WindUI:Notify({
+            Title = "HAB",
+            Content = "Copiado al portapapeles!"
+        })
     end
 })
 
@@ -368,6 +383,11 @@ DebugSection:Button({
         WindUI:Notify({
             Title = "HAB",
             Content = contenido
+        })
+        setclipboard(contenido)
+        WindUI:Notify({
+            Title = "HAB",
+            Content = "Copiado al portapapeles!"
         })
     end
 })
