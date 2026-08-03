@@ -3,14 +3,14 @@ local TiempoInicio = os.time()
 
 local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
 
--- 1. CONFIGURACIÓN DE LA VENTANA
+-- 1. CONFIGURACIÓN DE LA VENTANA (Estilo Pro)
 local Window = WindUI:CreateWindow({
-    Title = "NC HUB",
+    Title = "NC HUB | DASHBOARD",
     Author = "By hidjcjgg",
     Folder = "May67Scripts",
-    Icon = "solar:bolt-bold",
+    Icon = "solar:widget-bold",
     Theme = "Dark",
-    Size = UDim2.fromOffset(600, 450), -- Tamaño extra para evitar bugs
+    Size = UDim2.fromOffset(600, 460),
     NewElements = true,
     Topbar = {
         Height = 44,
@@ -18,109 +18,65 @@ local Window = WindUI:CreateWindow({
     }
 })
 
--- 2. SECCIONES DEL SIDEBAR (Organizadas como pediste)
-local SeccionHome = Window:Section({
-    Title = "HOME"
-})
-
-local SeccionTrampas = Window:Section({
-    Title = "TRAMPAS"
-})
-
-local SeccionSistema = Window:Section({
-    Title = "SISTEMA"
-})
+-- 2. SECCIONES DEL SIDEBAR
+local SeccionHome = Window:Section({ Title = "PRINCIPAL" })
+local SeccionTrampas = Window:Section({ Title = "HERRAMIENTAS" })
+local SeccionSistema = Window:Section({ Title = "SISTEMA" })
 
 -- ==========================================
--- 3. PESTAÑA: INICIO (Rediseño Profesional)
+-- 3. PESTAÑA: HOME (DISEÑO BENTO BOX)
 -- ==========================================
 local HomeTab = SeccionHome:Tab({
-    Title = "Inicio",
+    Title = "Dashboard",
     Icon = "solar:home-2-bold"
 })
 
--- OBTENCIÓN DE DATOS DEL JUEGO Y SERVIDOR
-local MarketplaceService = game:GetService("MarketplaceService")
-local infoJuego = MarketplaceService:GetProductInfo(game.PlaceId)
-local nombreJuego = infoJuego.Name or "Juego Desconocido"
-local maxJugadores = game.Players.MaxPlayers
-local jugadoresActuales = #game.Players:GetPlayers()
-
--- --- SECCIÓN 1: PERFIL DEL JUGADOR ---
-local PerfilSection = HomeTab:Section({
-    Title = "PERFIL DEL USUARIO"
-})
-
--- Intentamos la foto una última vez con un método de respaldo
+-- --- TARJETA 1: PERFIL ---
+local UserGroup = HomeTab:Group({ Title = "PERFIL DEL USUARIO" })
 local userId = game.Players.LocalPlayer.UserId
-local fotoUrl = "https://www.roblox.com/headshot-thumbnail/image?userId="..userId.."&width=420&height=420&format=png"
 
-PerfilSection:Image({
-    Image = fotoUrl,
+UserGroup:Image({
+    Image = "https://www.roblox.com/headshot-thumbnail/image?userId="..userId.."&width=420&height=420&format=png",
     AspectRatio = "1:1",
     Radius = 100
 })
 
-PerfilSection:Section({
-    Title = "👤 Usuario: " .. game.Players.LocalPlayer.Name
+UserGroup:Label({
+    Title = "Usuario: " .. game.Players.LocalPlayer.Name,
+    Desc = "ID: " .. userId
 })
 
-PerfilSection:Section({
-    Title = "🏷️ Apodo: " .. game.Players.LocalPlayer.DisplayName
+-- --- TARJETA 2: ESTADO DEL JUEGO ---
+local GameGroup = HomeTab:Group({ Title = "ESTADO DEL JUEGO" })
+local infoJuego = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId)
+
+GameGroup:Label({
+    Title = "🎮 " .. (infoJuego.Name or "Juego"),
+    Desc = "Servidor: " .. #game.Players:GetPlayers() .. " / " .. game.Players.MaxPlayers
 })
 
-PerfilSection:Section({
-    Title = "📅 Antigüedad: " .. game.Players.LocalPlayer.AccountAge .. " días"
+-- --- TARJETA 3: MONITOR DE SESIÓN ---
+local SessionGroup = HomeTab:Group({ Title = "MONITOR DE SESIÓN" })
+local TimeLabel = SessionGroup:Label({
+    Title = "⏳ Tiempo: 0h 0m 0s",
+    Desc = "Estado: Conectado y Seguro"
 })
 
--- --- SECCIÓN 2: DATOS DEL JUEGO ---
-local GameSection = HomeTab:Section({
-    Title = "INFORMACIÓN DEL JUEGO"
-})
-
-GameSection:Section({
-    Title = "🎮 Jugando a: " .. nombreJuego
-})
-
-GameSection:Section({
-    Title = "🆔 Place ID: " .. game.PlaceId
-})
-
-GameSection:Section({
-    Title = "👥 Servidor: " .. jugadoresActuales .. " / " .. maxJugadores .. " jugadores"
-})
-
--- --- SECCIÓN 3: ESTADO DE SESIÓN ---
-local StatusSection = HomeTab:Section({
-    Title = "ESTADO DE SESIÓN"
-})
-
-local TimeLabel = StatusSection:Section({
-    Title = "⏳ Tiempo activo: 0h 0m 0s"
-})
-
-StatusSection:Section({
-    Title = "✅ Hub Status: Operacional"
-})
-
--- Bucle de actualización de tiempo
 task.spawn(function()
     while true do
         local segundos = os.time() - TiempoInicio
         local mins = math.floor(segundos / 60)
         local horas = math.floor(mins / 60)
         local texto = string.format("%dh %dm %ds", horas, mins % 60, segundos % 60)
-        
         pcall(function()
-            TimeLabel:SetTitle("⏳ Tiempo activo: " .. texto)
+            TimeLabel:SetTitle("⏳ Tiempo: " .. texto)
         end)
-        
         task.wait(1)
     end
 end)
 
 -- ==========================================
--- 4. PESTAÑA: MOVIMIENTO (Ahora en Trampas)
+-- 4. PESTAÑA: MOVIMIENTO (TRAMPAS)
 -- ==========================================
 local MovTab = SeccionTrampas:Tab({
     Title = "Movimiento",
@@ -195,7 +151,7 @@ CheatTab:Toggle({
 })
 
 -- ==========================================
--- 6. PESTAÑA: VUELO (Con Slider recuperado)
+-- 6. PESTAÑA: VUELO (Fly Pro)
 -- ==========================================
 local FlyTab = SeccionTrampas:Tab({
     Title = "Vuelo",
