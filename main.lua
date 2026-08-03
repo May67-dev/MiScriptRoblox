@@ -107,7 +107,7 @@ CheatTab:Toggle({
     end
 })
 
--- 5. PESTAÑA: VUELO (Fly con Animación Pro)
+-- 5. PESTAÑA: VUELO (Fly Profesional Corregido)
 local FlyTab = SeccionTrampas:Tab({
     Title = "Vuelo",
     Icon = "solar:plain-bold"
@@ -131,7 +131,7 @@ FlyTab:Slider({
 
 FlyTab:Toggle({
     Title = "Activar Vuelo",
-    Desc = "Pose de vuelo activada (Sin animación de caída)",
+    Desc = "Joystick total + Animación estable",
     Callback = function(state)
         VueloActivo = state
         local player = game.Players.LocalPlayer
@@ -141,39 +141,53 @@ FlyTab:Toggle({
         local camera = workspace.CurrentCamera
         
         if VueloActivo then
+            -- Limpiamos fuerzas antiguas
             if root:FindFirstChild("FlyForce") then root.FlyForce:Destroy() end
+            if root:FindFirstChild("FlyGyro") then root.FlyGyro:Destroy() end
             
-            -- ESTO CORRIGE LA ANIMACIÓN:
-            hum.PlatformStand = true -- Congela la animación de caída
+            -- 1. CONGELAR ANIMACIÓN DE CAÍDA
+            hum.PlatformStand = true 
             
+            -- 2. FUERZA DE MOVIMIENTO
             local bv = Instance.new("BodyVelocity")
             bv.Name = "FlyForce"
             bv.Parent = root
             bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
             bv.Velocity = Vector3.new(0, 0, 0)
             
+            -- 3. ESTABILIZADOR (Para que no se caiga de lado)
+            local bg = Instance.new("BodyGyro")
+            bg.Name = "FlyGyro"
+            bg.Parent = root
+            bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+            bg.P = 10000 -- Fuerza de estabilidad
+            bg.CFrame = root.CFrame
+            
             task.spawn(function()
                 while VueloActivo do
                     local moveDir = hum.MoveDirection
                     if moveDir.Magnitude > 0 then
-                        local camLook = camera.CFrame.LookVector
-                        local camHorizontal = Vector3.new(camLook.X, 0, camLook.Z).Unit
-                        local forwardAmount = moveDir:Dot(camHorizontal)
-                        local finalVelocity = (moveDir + Vector3.new(0, camLook.Y * forwardAmount, 0)).Unit
-                        bv.Velocity = finalVelocity * VelocidadVuelo
+                        -- Lógica Matemática Pro:
+                        -- Convertimos el movimiento del joystick al espacio de la cámara
+                        local lookCF = camera.CFrame
+                        local direction = lookCF:VectorToWorldSpace(lookCF:VectorToObjectSpace(moveDir))
                         
-                        -- Opcional: Hace que el personaje se incline hacia donde vuela
-                        root.CFrame = CFrame.new(root.Position, root.Position + finalVelocity)
+                        bv.Velocity = direction * VelocidadVuelo
+                        -- Hace que el personaje rote suavemente hacia donde vas
+                        bg.CFrame = CFrame.new(root.Position, root.Position + direction)
                     else
                         bv.Velocity = Vector3.new(0, 0, 0)
+                        -- Mantiene al personaje mirando al frente cuando está quieto
+                        bg.CFrame = CFrame.new(root.Position, root.Position + camera.CFrame.LookVector)
                     end
                     task.wait()
                 end
                 
-                -- AL APAGAR: Restauramos todo a la normalidad
-                hum.PlatformStand = false 
-                hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+                -- AL APAGAR: Restaurar todo
+                hum.PlatformStand = false
                 if root:FindFirstChild("FlyForce") then root.FlyForce:Destroy() end
+                if root:FindFirstChild("FlyGyro") then root.FlyGyro:Destroy() end
+                hum:ChangeState(Enum.HumanoidStateType.GettingUp)
             end)
         end
     end
