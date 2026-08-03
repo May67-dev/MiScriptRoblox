@@ -113,11 +113,38 @@ local FlyTab = SeccionTrampas:Tab({
     Icon = "solar:plain-bold"
 })
 
-FlyTab:Button({
-    Title = "Activar Vuelo (Fly)",
-    Callback = function()
-        -- Aquí puedes pegar tu script de Fly favorito o usar este básico
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.lua"))()
+-- Variable para controlar el estado (ponla justo antes del Toggle)
+local VueloActivo = false
+local VelocidadVuelo = 50
+
+FlyTab:Toggle({
+    Title = "Activar Vuelo",
+    Desc = "Mueve el joystick para flotar",
+    Callback = function(state)
+        VueloActivo = state
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        local root = character:WaitForChild("HumanoidRootPart")
+        
+        if VueloActivo then
+            -- Crea la fuerza física para flotar
+            local bv = Instance.new("BodyVelocity")
+            bv.Name = "FlyForce"
+            bv.Parent = root
+            bv.Velocity = Vector3.new(0, 0, 0)
+            bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+            
+            -- Hilo que actualiza la dirección hacia donde miras
+            task.spawn(function()
+                while VueloActivo do
+                    bv.Velocity = workspace.CurrentCamera.CFrame.LookVector * VelocidadVuelo
+                    task.wait()
+                end
+                if root:FindFirstChild("FlyForce") then
+                    root.FlyForce:Destroy()
+                end
+            end)
+        end
     end
 })
 
