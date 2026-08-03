@@ -2,8 +2,8 @@ local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footag
 
 -- CREACIÓN DE VENTANA
 local Window = WindUI:CreateWindow({
-    Title = "ESCRIBE_NOMBRE",
-    Author = "TU_NOMBRE",
+    Title = "NC HUB",
+    Author = "hidjcjgg",
     Folder = "MiConfig",
     Icon = "solar:ghost-bold",
     Theme = "Dark",
