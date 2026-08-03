@@ -206,30 +206,3 @@ SysTab:Button({
         Window:Destroy()
     end
 })
-
--- 6. PESTAÑA: SISTEMA
-local SysTab = SeccionSistema:Tab({
-    Title = "Ajustes",
-    Icon = "solar:settings-bold"
-})
-
--- Anti-AFK
-SysTab:Button({
-    Title = "Activar Anti-AFK",
-    Callback = function()
-        local vu = game:GetService("VirtualUser")
-        game.Players.LocalPlayer.Idled:Connect(function()
-            vu:Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
-            wait(1)
-            vu:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
-        end)
-        WindUI:Notify({Title = "Sistema", Content = "Anti-AFK Activado"})
-    end
-})
-
-SysTab:Button({
-    Title = "Cerrar Hub",
-    Callback = function()
-        Window:Destroy()
-    end
-})
