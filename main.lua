@@ -39,35 +39,39 @@ local HomeTab = SeccionHome:Tab({
     Icon = "solar:home-2-bold"
 })
 
--- Obtener Foto de Avatar (Corregido)
+-- Método directo para obtener la foto (Más fiable en Delta)
 local userId = game.Players.LocalPlayer.UserId
-local thumbType = Enum.ThumbnailType.HeadShot
-local thumbSize = Enum.ThumbnailSize.Size420x420
-local fotoUrl, listo = game.Players:GetUserThumbnailAsync(userId, thumbType, thumbSize)
+local fotoUrl = "rbxthumb://type=AvatarHeadShot&id=" .. userId .. "&w=420&h=420"
 
+-- Mostrar Foto Redonda
 HomeTab:Image({
     Image = fotoUrl,
     AspectRatio = "1:1",
-    Radius = 100 -- Foto redonda
+    Radius = 100 -- Esto la hace redonda
 })
 
+-- Nombre del Jugador
 HomeTab:Section({
     Title = "Usuario: " .. game.Players.LocalPlayer.Name
 })
 
+-- Etiqueta de Tiempo de Sesión
 local TimeLabel = HomeTab:Section({
     Title = "Sesión: 0h 0m 0s"
 })
 
+-- Bucle para actualizar el tiempo de sesión
 task.spawn(function()
     while true do
         local segundos = os.time() - TiempoInicio
         local mins = math.floor(segundos / 60)
         local horas = math.floor(mins / 60)
         local texto = string.format("%dh %dm %ds", horas, mins % 60, segundos % 60)
+        
         pcall(function()
             TimeLabel:SetTitle("Sesión: " .. texto)
         end)
+        
         task.wait(1)
     end
 end)
