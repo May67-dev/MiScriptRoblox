@@ -289,72 +289,38 @@ local SeccionJuegos = Window:Section({
 })
 
 -- ==========================================
--- HACK A BUSINESS - DEBUG (MÓVIL)
+-- HACK A BUSINESS - DEBUG (MOVIL)
 -- ==========================================
-local HABTab = SeccionJuegos:Tab({
-    Title = "Hack A Business",
-    Icon = "solar:computer-bold"
-})
+local HABTab = Window:Tab({Title = "HAB Debug", Icon = "solar:computer-bold"})
+local DebugSection = HABTab:Section({Title = "🔍 Nombres Reales", Box = true, BoxBorder = true})
 
-local DebugSection = HABTab:Section({
-    Title = "🔍 DEBUG - Nombres Reales",
-    Box = true,
-    BoxBorder = true
-})
+DebugSection:Button({Title = "Listar Workspace", Callback = function()
+    local l = {"WORKSPACE:"}
+    for _, o in ipairs(game.Workspace:GetChildren()) do table.insert(l, "- " .. o.Name) end
+    WindUI:Notify({Title = "HAB", Content = table.concat(l, char(10))})
+end})
 
-DebugSection:Button({
-    Title = "Listar Workspace",
-    Callback = function()
-        local lista = "=== WORKSPACE ===
-"
-        for _, obj in ipairs(game.Workspace:GetChildren()) do
-            lista = lista .. "• " .. obj.Name .. "
-"
+DebugSection:Button({Title = "Listar ReplicatedStorage", Callback = function()
+    local l = {"ReplicatedStorage:"}
+    for _, o in ipairs(game.ReplicatedStorage:GetChildren()) do table.insert(l, "- " .. o.Name) end
+    WindUI:Notify({Title = "HAB", Content = table.concat(l, char(10))})
+end})
+
+DebugSection:Button({Title = "Buscar Objetos", Callback = function()
+    local l = {"OBJETOS:"}
+    for _, o in ipairs(game.Workspace:GetDescendants()) do
+        local n = o.Name:lower()
+        if n:find("data") or n:find("server") or n:find("antenna") or n:find("base") or n:find("sell") or n:find("collect") then
+            table.insert(l, "+ " .. o.Name)
         end
-        WindUI:Notify({Title = "Hack A Business", Content = lista})
     end
-})
+    WindUI:Notify({Title = "HAB", Content = table.concat(l, char(10))})
+end})
 
-DebugSection:Button({
-    Title = "Listar ReplicatedStorage",
-    Callback = function()
-        local lista = "=== REPLICATEDSTORAGE ===
-"
-        for _, obj in ipairs(game.ReplicatedStorage:GetChildren()) do
-            lista = lista .. "• " .. obj.Name .. "
-"
-        end
-        WindUI:Notify({Title = "Hack A Business", Content = lista})
+DebugSection:Button({Title = "Buscar Remotes", Callback = function()
+    local l = {"REMOTES:"}
+    for _, o in ipairs(game.ReplicatedStorage:GetDescendants()) do
+        if o:IsA("RemoteEvent") or o:IsA("RemoteFunction") then table.insert(l, "- " .. o.Name) end
     end
-})
-
-DebugSection:Button({
-    Title = "Buscar Data/Server/Antenna",
-    Callback = function()
-        local lista = "=== OBJETOS IMPORTANTES ===
-"
-        for _, obj in ipairs(game.Workspace:GetDescendants()) do
-            local name = obj.Name:lower()
-            if name:find("data") or name:find("server") or name:find("file") or name:find("antenna") or name:find("base") or name:find("plot") or name:find("sell") or name:find("collect") or name:find("steal") or name:find("hack") or name:find("buy") or name:find("place") then
-                lista = lista .. "✓ " .. obj.Name .. " [" .. obj.ClassName .. "]
-"
-            end
-        end
-        WindUI:Notify({Title = "Hack A Business", Content = lista})
-    end
-})
-
-DebugSection:Button({
-    Title = "Buscar Remotes",
-    Callback = function()
-        local lista = "=== REMOTES ===
-"
-        for _, obj in ipairs(game.ReplicatedStorage:GetDescendants()) do
-            if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
-                lista = lista .. "REMOTE: " .. obj.Name .. "
-"
-            end
-        end
-        WindUI:Notify({Title = "Hack A Business", Content = lista})
-    end
-})
+    WindUI:Notify({Title = "HAB", Content = table.concat(l, char(10))})
+end})
