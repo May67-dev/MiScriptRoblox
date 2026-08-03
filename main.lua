@@ -32,35 +32,78 @@ local SeccionSistema = Window:Section({
 })
 
 -- ==========================================
--- 3. PESTAÑA: INICIO (Información del Jugador)
+-- 3. PESTAÑA: INICIO (Rediseño Profesional)
 -- ==========================================
 local HomeTab = SeccionHome:Tab({
     Title = "Inicio",
     Icon = "solar:home-2-bold"
 })
 
--- Método directo para obtener la foto (Más fiable en Delta)
-local userId = game.Players.LocalPlayer.UserId
-local fotoUrl = "rbxthumb://type=AvatarHeadShot&id=" .. userId .. "&w=420&h=420"
+-- OBTENCIÓN DE DATOS DEL JUEGO Y SERVIDOR
+local MarketplaceService = game:GetService("MarketplaceService")
+local infoJuego = MarketplaceService:GetProductInfo(game.PlaceId)
+local nombreJuego = infoJuego.Name or "Juego Desconocido"
+local maxJugadores = game.Players.MaxPlayers
+local jugadoresActuales = #game.Players:GetPlayers()
 
--- Mostrar Foto Redonda
-HomeTab:Image({
+-- --- SECCIÓN 1: PERFIL DEL JUGADOR ---
+local PerfilSection = HomeTab:Section({
+    Title = "PERFIL DEL USUARIO"
+})
+
+-- Intentamos la foto una última vez con un método de respaldo
+local userId = game.Players.LocalPlayer.UserId
+local fotoUrl = "https://www.roblox.com/headshot-thumbnail/image?userId="..userId.."&width=420&height=420&format=png"
+
+PerfilSection:Image({
     Image = fotoUrl,
     AspectRatio = "1:1",
-    Radius = 100 -- Esto la hace redonda
+    Radius = 100
 })
 
--- Nombre del Jugador
-HomeTab:Section({
-    Title = "Usuario: " .. game.Players.LocalPlayer.Name
+PerfilSection:Section({
+    Title = "👤 Usuario: " .. game.Players.LocalPlayer.Name
 })
 
--- Etiqueta de Tiempo de Sesión
-local TimeLabel = HomeTab:Section({
-    Title = "Sesión: 0h 0m 0s"
+PerfilSection:Section({
+    Title = "🏷️ Apodo: " .. game.Players.LocalPlayer.DisplayName
 })
 
--- Bucle para actualizar el tiempo de sesión
+PerfilSection:Section({
+    Title = "📅 Antigüedad: " .. game.Players.LocalPlayer.AccountAge .. " días"
+})
+
+-- --- SECCIÓN 2: DATOS DEL JUEGO ---
+local GameSection = HomeTab:Section({
+    Title = "INFORMACIÓN DEL JUEGO"
+})
+
+GameSection:Section({
+    Title = "🎮 Jugando a: " .. nombreJuego
+})
+
+GameSection:Section({
+    Title = "🆔 Place ID: " .. game.PlaceId
+})
+
+GameSection:Section({
+    Title = "👥 Servidor: " .. jugadoresActuales .. " / " .. maxJugadores .. " jugadores"
+})
+
+-- --- SECCIÓN 3: ESTADO DE SESIÓN ---
+local StatusSection = HomeTab:Section({
+    Title = "ESTADO DE SESIÓN"
+})
+
+local TimeLabel = StatusSection:Section({
+    Title = "⏳ Tiempo activo: 0h 0m 0s"
+})
+
+StatusSection:Section({
+    Title = "✅ Hub Status: Operacional"
+})
+
+-- Bucle de actualización de tiempo
 task.spawn(function()
     while true do
         local segundos = os.time() - TiempoInicio
@@ -69,7 +112,7 @@ task.spawn(function()
         local texto = string.format("%dh %dm %ds", horas, mins % 60, segundos % 60)
         
         pcall(function()
-            TimeLabel:SetTitle("Sesión: " .. texto)
+            TimeLabel:SetTitle("⏳ Tiempo activo: " .. texto)
         end)
         
         task.wait(1)
