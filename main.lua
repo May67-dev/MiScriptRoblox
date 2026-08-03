@@ -289,246 +289,83 @@ local SeccionJuegos = Window:Section({
 })
 
 -- ==========================================
--- HACK A BUSINESS
+-- HACK A BUSINESS - DEBUG
 -- ==========================================
-local HAB_PLACE_ID = 118055952211055
-local enHAB = (game.PlaceId == HAB_PLACE_ID)
-
 local HABTab = SeccionJuegos:Tab({
     Title = "Hack A Business",
     Icon = "solar:computer-bold"
 })
 
-HABTab:Section({
-    Title = enHAB and "✅ Estás en Hackear un negocio" or "⚠️ Entra al juego para usar estas opciones"
-})
-
-HABTab:Section({
-    Title = "PlaceId: " .. tostring(game.PlaceId)
-})
-
-local CardHABAuto = HABTab:Section({
-    Title = "🤖 AUTO",
+local DebugSection = HABTab:Section({
+    Title = "🔍 DEBUG - Nombres Reales",
     Box = true,
     BoxBorder = true
 })
 
-local AutoCollect = false
-local AutoSteal = false
-local SellBestZone = false
-local AutoBuyAntennas = false
-local AutoPlaceAntennas = false
-
-CardHABAuto:Toggle({
-    Title = "Auto Collect",
-    Callback = function(state)
-        AutoCollect = state
-        if not enHAB then
-            WindUI:Notify({ Title = "Hack A Business", Content = "Debes estar en el juego" })
-            return
-        end
-        WindUI:Notify({
-            Title = "Hack A Business",
-            Content = state and "Auto Collect ON" or "Auto Collect OFF"
-        })
-    end
-})
-
-CardHABAuto:Toggle({
-    Title = "Auto Steal",
-    Callback = function(state)
-        AutoSteal = state
-        if not enHAB then
-            WindUI:Notify({ Title = "Hack A Business", Content = "Debes estar en el juego" })
-            return
-        end
-        WindUI:Notify({
-            Title = "Hack A Business",
-            Content = state and "Auto Steal ON" or "Auto Steal OFF"
-        })
-    end
-})
-
-CardHABAuto:Toggle({
-    Title = "Sell Best Zone",
-    Callback = function(state)
-        SellBestZone = state
-        if not enHAB then
-            WindUI:Notify({ Title = "Hack A Business", Content = "Debes estar en el juego" })
-            return
-        end
-        WindUI:Notify({
-            Title = "Hack A Business",
-            Content = state and "Sell Best Zone ON" or "Sell Best Zone OFF"
-        })
-    end
-})
-
-CardHABAuto:Toggle({
-    Title = "Auto Buy Antennas",
-    Callback = function(state)
-        AutoBuyAntennas = state
-        if not enHAB then
-            WindUI:Notify({ Title = "Hack A Business", Content = "Debes estar en el juego" })
-            return
-        end
-        WindUI:Notify({
-            Title = "Hack A Business",
-            Content = state and "Auto Buy Antennas ON" or "Auto Buy Antennas OFF"
-        })
-    end
-})
-
-CardHABAuto:Toggle({
-    Title = "Auto Place Antennas",
-    Callback = function(state)
-        AutoPlaceAntennas = state
-        if not enHAB then
-            WindUI:Notify({ Title = "Hack A Business", Content = "Debes estar en el juego" })
-            return
-        end
-        WindUI:Notify({
-            Title = "Hack A Business",
-            Content = state and "Auto Place Antennas ON" or "Auto Place Antennas OFF"
-        })
-    end
-})
-
--- Bucle principal con lógica real
-task.spawn(function()
-    local Players = game:GetService("Players")
-    local LP = Players.LocalPlayer
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    local Workspace = game:GetService("Workspace")
-    
-    -- Remotes comunes en Hack A Business
-    local CollectRemote = ReplicatedStorage:FindFirstChild("Collect") 
-        or ReplicatedStorage:FindFirstChild("CollectData")
-        or ReplicatedStorage:FindFirstChild("Grab")
-    
-    local SellRemote = ReplicatedStorage:FindFirstChild("Sell") 
-        or ReplicatedStorage:FindFirstChild("SellData")
-        or ReplicatedStorage:FindFirstChild("Drop")
-    
-    local BuyRemote = ReplicatedStorage:FindFirstChild("Buy") 
-        or ReplicatedStorage:FindFirstChild("BuyAntenna")
-        or ReplicatedStorage:FindFirstChild("Purchase")
-    
-    local PlaceRemote = ReplicatedStorage:FindFirstChild("Place") 
-        or ReplicatedStorage:FindFirstChild("PlaceAntenna")
-        or ReplicatedStorage:FindFirstChild("Setup")
-    
-    local StealRemote = ReplicatedStorage:FindFirstChild("Steal") 
-        or ReplicatedStorage:FindFirstChild("Hack")
-        or ReplicatedStorage:FindFirstChild("Rob")
-    
-    while true do
-        if enHAB then
-            local Character = LP.Character
-            local Root = Character and Character:FindFirstChild("HumanoidRootPart")
-            local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
-            
-            -- Auto Collect: recoger datos/servidores
-            if AutoCollect and Root then
-                for _, obj in ipairs(Workspace:GetDescendants()) do
-                    if obj.Name:lower():find("data") or obj.Name:lower():find("server") or obj.Name:lower():find("file") then
-                        if CollectRemote then
-                            pcall(function() CollectRemote:FireServer(obj) end)
-                        else
-                            Root.CFrame = obj.CFrame * CFrame.new(0, 3, 0)
-                            task.wait(0.2)
-                        end
-                    end
-                end
-            end
-            
-            -- Auto Steal: robar datos de otros jugadores/empresas
-            if AutoSteal then
-                for _, obj in ipairs(Workspace:GetDescendants()) do
-                    if obj.Name:lower():find("antenna") or obj.Name:lower():find("base") or obj.Name:lower():find("plot") then
-                        if StealRemote then
-                            pcall(function() StealRemote:FireServer(obj) end)
-                        end
-                    end
-                end
-            end
-            
-            -- Sell Best Zone: teleport y vender
-            if SellBestZone then
-                local SellZone = Workspace:FindFirstChild("SellZone") 
-                    or Workspace:FindFirstChild("Sell")
-                    or Workspace:FindFirstChild("DropZone")
-                    or Workspace:FindFirstChild("Drop")
-                
-                if SellZone and Root then
-                    Root.CFrame = SellZone.CFrame * CFrame.new(0, 0, 5)
-                    
-                    if SellRemote then
-                        pcall(function() SellRemote:FireServer() end)
-                    end
-                end
-            end
-            
-            -- Auto Buy Antennas: comprar antenas automáticamente
-            if AutoBuyAntennas and BuyRemote then
-                local Shop = Workspace:FindFirstChild("Shop") 
-                    or Workspace:FindFirstChild("Store")
-                    or Workspace:FindFirstChild("AntennaShop")
-                
-                if Shop then
-                    pcall(function() BuyRemote:FireServer("Antenna") end)
-                end
-            end
-            
-            -- Auto Place Antennas: colocar antenas
-            if AutoPlaceAntennas and PlaceRemote then
-                local Plot = Workspace:FindFirstChild("Plot") 
-                    or Workspace:FindFirstChild("Base")
-                    or Workspace:FindFirstChild("MyPlot")
-                
-                if Plot and Root then
-                    Root.CFrame = Plot.CFrame * CFrame.new(0, 0, 5)
-                    pcall(function() PlaceRemote:FireServer("Antenna") end)
-                end
-            end
-        end
-        task.wait(0.5)
-    end
-end)
-
-local CardHABUtil = HABTab:Section({
-    Title = "🛠️ UTILIDADES",
-    Box = true,
-    BoxBorder = true
-})
-
-CardHABUtil:Button({
-    Title = "Copiar PlaceId",
+DebugSection:Button({
+    Title = "Listar Workspace",
     Callback = function()
-        setclipboard(tostring(game.PlaceId))
-        WindUI:Notify({ Title = "Hack A Business", Content = "PlaceId copiado" })
-    end
-})
-
-CardHABUtil:Button({
-    Title = "TEST: Speed + Jump",
-    Callback = function()
-        local LP = game.Players.LocalPlayer
-        local Character = LP.Character or LP.CharacterAdded:Wait()
-        local Hum = Character:FindFirstChildOfClass("Humanoid")
-        if Hum then
-            Hum.WalkSpeed = 200
-            Hum.JumpPower = 200
-            WindUI:Notify({ Title = "Hack A Business", Content = "Speed/Jump a 200" })
-        else
-            WindUI:Notify({ Title = "Hack A Business", Content = "No hay Humanoid" })
+        print("=== WORKSPACE ===")
+        for _, obj in ipairs(game.Workspace:GetChildren()) do
+            print("• " .. obj.Name .. " [" .. obj.ClassName .. "]")
         end
+        print("=== WORKSPACE (DESCENDANTS) ===")
+        for _, obj in ipairs(game.Workspace:GetDescendants()) do
+            print("• " .. obj.Name .. " [" .. obj.ClassName .. "]")
+        end
+        WindUI:Notify({Title = "Hack A Business", Content = "Mira la consola (F9)"})
     end
 })
 
-CardHABUtil:Button({
-    Title = "Reload Remotes",
+DebugSection:Button({
+    Title = "Listar ReplicatedStorage",
     Callback = function()
-        WindUI:Notify({ Title = "Hack A Business", Content = "Remotes recargados" })
+        print("=== REPLICATEDSTORAGE ===")
+        for _, obj in ipairs(game.ReplicatedStorage:GetChildren()) do
+            print("• " .. obj.Name .. " [" .. obj.ClassName .. "]")
+        end
+        print("=== REPLICATEDSTORAGE (DESCENDANTS) ===")
+        for _, obj in ipairs(game.ReplicatedStorage:GetDescendants()) do
+            print("• " .. obj.Name .. " [" .. obj.ClassName .. "]")
+        end
+        WindUI:Notify({Title = "Hack A Business", Content = "Mira la consola (F9)"})
+    end
+})
+
+DebugSection:Button({
+    Title = "Listar StarterPlayer",
+    Callback = function()
+        print("=== STARTERPLAYER ===")
+        for _, obj in ipairs(game.StarterPlayer:GetChildren()) do
+            print("• " .. obj.Name .. " [" .. obj.ClassName .. "]")
+        end
+        WindUI:Notify({Title = "Hack A Business", Content = "Mira la consola (F9)"})
+    end
+})
+
+DebugSection:Button({
+    Title = "Buscar 'Data' / 'Server'",
+    Callback = function()
+        print("=== BUSCANDO DATA/SERVER ===")
+        for _, obj in ipairs(game.Workspace:GetDescendants()) do
+            local name = obj.Name:lower()
+            if name:find("data") or name:find("server") or name:find("file") or name:find("antenna") or name:find("base") or name:find("plot") or name:find("sell") or name:find("collect") or name:find("steal") or name:find("hack") then
+                print("✓ " .. obj.Name .. " [" .. obj.ClassName .. "]")
+            end
+        end
+        WindUI:Notify({Title = "Hack A Business", Content = "Mira la consola (F9)"})
+    end
+})
+
+DebugSection:Button({
+    Title = "Buscar Remotes",
+    Callback = function()
+        print("=== BUSCANDO REMOTES ===")
+        for _, obj in ipairs(game.ReplicatedStorage:GetDescendants()) do
+            if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
+                print("REMOTE: " .. obj.Name .. " [" .. obj.ClassName .. "]")
+            end
+        end
+        WindUI:Notify({Title = "Hack A Business", Content = "Mira la consola (F9)"})
     end
 })
