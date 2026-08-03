@@ -1,3 +1,6 @@
+-- REGISTRO DE TIEMPO (Para la sesión)
+local TiempoInicio = os.time()
+
 local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
 
 -- 1. CONFIGURACIÓN DE LA VENTANA
@@ -7,7 +10,7 @@ local Window = WindUI:CreateWindow({
     Folder = "May67Scripts",
     Icon = "solar:bolt-bold",
     Theme = "Dark",
-    Size = UDim2.fromOffset(580, 420), -- Ancho para evitar bug de texto
+    Size = UDim2.fromOffset(580, 420),
     NewElements = true,
     Topbar = {
         Height = 44,
@@ -28,19 +31,70 @@ local SeccionSistema = Window:Section({
     Title = "SISTEMA"
 })
 
--- 3. PESTAÑA: MOVIMIENTO
+-- ==========================================
+-- 3. PESTAÑA: MI PERFIL (NUEVA)
+-- ==========================================
+local PerfilTab = SeccionJugador:Tab({
+    Title = "Mi Perfil",
+    Icon = "solar:user-circle-bold"
+})
+
+-- Obtener Foto de Avatar
+local userId = game.Players.LocalPlayer.UserId
+local thumbType = Enum.ThumbnailType.HeadShot
+local thumbSize = Enum.ThumbnailSize.Size420x420
+local fotoUrl, listo = game.Players:GetUserThumbnailAsync(userId, thumbType, thumbSize)
+
+-- Mostrar Foto Redonda
+PerfilTab:Image({
+    Image = fotoUrl,
+    AspectRatio = "1:1",
+    Radius = 100
+})
+
+-- Datos del Jugador
+PerfilTab:Section({
+    Title = "Usuario: " .. game.Players.LocalPlayer.Name
+})
+
+PerfilTab:Section({
+    Title = "ID: " .. userId
+})
+
+-- Etiqueta de Tiempo de Sesión
+local TimeLabel = PerfilTab:Section({
+    Title = "Sesión: 0h 0m 0s"
+})
+
+-- Bucle para actualizar el tiempo
+task.spawn(function()
+    while true do
+        local segundos = os.time() - TiempoInicio
+        local mins = math.floor(segundos / 60)
+        local horas = math.floor(mins / 60)
+        local texto = string.format("%dh %dm %ds", horas, mins % 60, segundos % 60)
+        
+        pcall(function()
+            TimeLabel:SetTitle("Sesión: " .. texto)
+        end)
+        task.wait(1)
+    end
+end)
+
+-- ==========================================
+-- 4. PESTAÑA: MOVIMIENTO
+-- ==========================================
 local MovTab = SeccionJugador:Tab({
     Title = "Movimiento",
     Icon = "solar:walking-bold"
 })
 
--- Slider de Velocidad
 MovTab:Slider({
     Title = "Velocidad",
     Step = 1,
     Value = {
         Min = 16,
-        Max = 128,
+        Max = 500,
         Default = 16
     },
     Callback = function(v)
@@ -48,7 +102,6 @@ MovTab:Slider({
     end
 })
 
--- Toggle Salto Infinito
 local InfJumpEnabled = false
 MovTab:Toggle({
     Title = "Salto Infinito",
@@ -63,51 +116,49 @@ game:GetService("UserInputService").JumpRequest:Connect(function()
     end
 end)
 
--- 4. PESTAÑA: TRAMPAS
+-- ==========================================
+-- 5. PESTAÑA: HACKS (Noclip y ESP)
+-- ==========================================
 local CheatTab = SeccionTrampas:Tab({
     Title = "Hacks",
     Icon = "solar:ghost-bold"
 })
 
--- Noclip (Atravesar paredes)
 local NoclipEnabled = false
 CheatTab:Toggle({
-    Title = "Atravesar Paredes (Noclip)",
+    Title = "Atravesar Paredes",
     Callback = function(state)
         NoclipEnabled = state
     end
 })
 
 game:GetService("RunService").Stepped:Connect(function()
-    if NoclipEnabled then
+    if NoclipEnabled and game.Players.LocalPlayer.Character then
         for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
-            if v:IsA("BasePart") then
-                v.CanCollide = false
-            end
+            if v:IsA("BasePart") then v.CanCollide = false end
         end
     end
 end)
 
--- ESP (Ver Jugadores)
 CheatTab:Toggle({
     Title = "Ver Jugadores (ESP)",
     Callback = function(state)
         for _, p in pairs(game.Players:GetPlayers()) do
             if p ~= game.Players.LocalPlayer and p.Character then
                 if state then
-                    local h = Instance.new("Highlight", p.Character)
+                    local h = p.Character:FindFirstChild("Highlight") or Instance.new("Highlight", p.Character)
                     h.FillColor = Color3.fromRGB(255, 0, 0)
                 else
-                    if p.Character:FindFirstChild("Highlight") then
-                        p.Character.Highlight:Destroy()
-                    end
+                    if p.Character:FindFirstChild("Highlight") then p.Character.Highlight:Destroy() end
                 end
             end
         end
     end
 })
 
--- 5. PESTAÑA: VUELO (Fly con Modo Shift Lock)
+-- ==========================================
+-- 6. PESTAÑA: VUELO (Fly Pro)
+-- ==========================================
 local FlyTab = SeccionTrampas:Tab({
     Title = "Vuelo",
     Icon = "solar:plain-bold"
@@ -116,125 +167,68 @@ local FlyTab = SeccionTrampas:Tab({
 local VueloActivo = false
 local VelocidadVuelo = 80
 
-FlyTab:Slider({
-    Title = "Velocidad de Vuelo",
-    Step = 1,
-    Value = {
-        Min = 10,
-        Max = 400,
-        Default = 80
-    },
-    Callback = function(v)
-        VelocidadVuelo = v
-    end
-})
-
 FlyTab:Toggle({
     Title = "Activar Vuelo",
-    Desc = "Modo Shift Lock (Cuerpo sigue a la cámara)",
     Callback = function(state)
         VueloActivo = state
-        local player = game.Players.LocalPlayer
-        local character = player.Character or player.CharacterAdded:Wait()
-        local root = character:WaitForChild("HumanoidRootPart")
-        local hum = character:WaitForChild("Humanoid")
-        local camera = workspace.CurrentCamera
+        local root = game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+        local hum = game.Players.LocalPlayer.Character:WaitForChild("Humanoid")
         
         if VueloActivo then
-            if root:FindFirstChild("FlyForce") then root.FlyForce:Destroy() end
-            if root:FindFirstChild("FlyGyro") then root.FlyGyro:Destroy() end
-            
-            hum.PlatformStand = true 
-            
-            local bv = Instance.new("BodyVelocity")
+            hum.PlatformStand = true
+            local bv = Instance.new("BodyVelocity", root)
             bv.Name = "FlyForce"
-            bv.Parent = root
             bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-            bv.Velocity = Vector3.new(0, 0, 0)
-            
-            local bg = Instance.new("BodyGyro")
+            local bg = Instance.new("BodyGyro", root)
             bg.Name = "FlyGyro"
-            bg.Parent = root
             bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
-            bg.P = 15000 -- Un poco más de fuerza para que gire rápido
             
             task.spawn(function()
                 while VueloActivo do
-                    -- BLOQUEO DE CÁMARA (Shift Lock):
-                    -- El personaje siempre mira exactamente a donde mira la cámara
-                    bg.CFrame = camera.CFrame
-                    
-                    local moveDir = hum.MoveDirection
-                    if moveDir.Magnitude > 0 then
-                        -- Lógica 3D de movimiento
-                        local look = camera.CFrame.LookVector
-                        local right = camera.CFrame.RightVector
-                        
+                    bg.CFrame = workspace.CurrentCamera.CFrame
+                    if hum.MoveDirection.Magnitude > 0 then
+                        local look = workspace.CurrentCamera.CFrame.LookVector
+                        local right = workspace.CurrentCamera.CFrame.RightVector
                         local forwardVec = Vector3.new(look.X, 0, look.Z).Unit
                         local rightVec = Vector3.new(right.X, 0, right.Z).Unit
-                        
-                        local forwardAmount = moveDir:Dot(forwardVec)
-                        local rightAmount = moveDir:Dot(rightVec)
-                        
-                        local finalDir = (look * forwardAmount) + (right * rightAmount)
-                        bv.Velocity = finalDir.Unit * VelocidadVuelo
+                        local forwardAmount = hum.MoveDirection:Dot(forwardVec)
+                        local rightAmount = hum.MoveDirection:Dot(rightVec)
+                        bv.Velocity = ((look * forwardAmount) + (right * rightAmount)).Unit * VelocidadVuelo
                     else
                         bv.Velocity = Vector3.new(0, 0, 0)
                     end
                     task.wait()
                 end
-                
                 hum.PlatformStand = false
                 if root:FindFirstChild("FlyForce") then root.FlyForce:Destroy() end
                 if root:FindFirstChild("FlyGyro") then root.FlyGyro:Destroy() end
-                root.Velocity = Vector3.new(0, 0, 0)
                 hum:ChangeState(Enum.HumanoidStateType.GettingUp)
             end)
         end
     end
 })
 
--- 6. PESTAÑA: SISTEMA (Ajustes finales)
-local SeccionSistema = Window:Section({
-    Title = "SISTEMA"
-})
-
+-- ==========================================
+-- 7. PESTAÑA: AJUSTES (SISTEMA)
+-- ==========================================
 local SysTab = SeccionSistema:Tab({
     Title = "Ajustes",
     Icon = "solar:settings-bold"
 })
 
 SysTab:Button({
-    Title = "Activar Anti-AFK (Ultra)",
-    Desc = "Mantiene tu sesión activa siempre",
+    Title = "Activar Anti-AFK",
     Callback = function()
-        -- Borramos cualquier conexión previa para no duplicar
-        if _G.AntiAFKConnection then _G.AntiAFKConnection:Disconnect() end
-        
-        -- MÉTODO 1: Bloquear el evento de inactividad
-        _G.AntiAFKConnection = game.Players.LocalPlayer.Idled:Connect(function()
-            local vu = game:GetService("VirtualUser")
-            vu:CaptureController()
-            vu:ClickButton2(Vector2.new())
-            print("Anti-AFK: Movimiento simulado para evitar desconexión.")
+        game.Players.LocalPlayer.Idled:Connect(function()
+            game:GetService("VirtualUser"):ClickButton2(Vector2.new())
         end)
-        
-        -- MÉTODO 2: Pequeño movimiento invisible cada 2 minutos
-        task.spawn(function()
-            while true do
-                task.wait(120) -- Cada 2 minutos
-                local root = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                if root then
-                    -- Hace que el personaje "tiemble" un milímetro, invisible para ti
-                    root.CFrame = root.CFrame * CFrame.new(0, 0.0001, 0)
-                end
-            end
-        end)
+        WindUI:Notify({Title = "Sistema", Content = "Anti-AFK Activado"})
+    end
+})
 
-        WindUI:Notify({
-            Title = "Sistema",
-            Content = "Anti-AFK Ultra Activado. Puedes dejar el móvil tranquilo.",
-            Duration = 5
-        })
+SysTab:Button({
+    Title = "Cerrar Hub",
+    Callback = function()
+        Window:Destroy()
     end
 })
