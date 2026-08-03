@@ -1,66 +1,66 @@
 local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
 
--- */ Configuración de la Ventana /* --
+-- */ Creación de la Ventana con estilo Mac /* --
 local Window = WindUI:CreateWindow({
-    Title = "NC HUB", -- TU NOMBRE AQUÍ
-    Author = "By Hidjcjgg",
+    Title = "NC HUB",
+    Author = "By hidjcjgg",
     Folder = "May67Scripts",
-    Icon = "solar:home-2-bold", -- Icono moderno
-    Theme = "Dark", -- Puedes probar "Mellowsi" para otro tono
+    Icon = "solar:ghost-bold", -- Un icono con estilo
+    Theme = "Dark",
+    NewElements = true, -- Activa el diseño más moderno
+    Topbar = {
+        Height = 44,
+        ButtonsType = "Mac", -- Esto pone los botones rojo/amarillo/verde arriba
+    },
     OpenButton = {
-        Title = "Abrir Hub",
+        Title = "Abrir NC HUB",
         Enabled = true,
         Draggable = true,
-        OnlyMobile = true -- Solo aparece el botón en celular
+        OnlyMobile = true
     }
 })
 
--- */ Pestañas /* --
-local MainTab = Window:Tab({
-    Title = "Principal",
-    Icon = "solar:info-square-bold",
+-- */ Secciones del Menú Lateral (Esto es lo que lo hace diferente) /* --
+local Categorias = Window:Section({
+    Title = "CATEGORÍAS",
+})
+
+-- */ Pestañas dentro de la Sección /* --
+local MainTab = Categorias:Tab({
+    Title = "Inicio",
+    Icon = "solar:home-2-bold",
     Border = true,
 })
 
-local PlayerTab = Window:Tab({
-    Title = "Jugador",
-    Icon = "solar:user-bold",
+local ScriptsTab = Categorias:Tab({
+    Title = "Scripts",
+    Icon = "solar:code-bold",
     Border = true,
 })
 
--- */ Sección de Bienvenida /* --
-local WelcomeSection = MainTab:Section({
-    Title = "Bienvenido, May67",
-})
+-- */ Contenido de la Pestaña Inicio /* --
+local WelcomeGroup = MainTab:Group({ Title = "Bienvenida" })
 
-WelcomeSection:Button({
-    Title = "Cerrar Hub",
-    Desc = "Destruye la interfaz por completo",
+WelcomeGroup:Button({
+    Title = "Cerrar Interfaz",
     Callback = function()
         Window:Destroy()
     end,
 })
 
--- */ Sección de Funciones (Jugador) /* --
-local PlayerSection = PlayerTab:Section({
-    Title = "Movimiento",
-})
+-- */ Contenido de la Pestaña Scripts /* --
+local PlayerGroup = ScriptsTab:Group({ Title = "Movimiento" })
 
--- Slider de Velocidad con Animación
-PlayerSection:Slider({
+PlayerGroup:Slider({
     Title = "Velocidad",
-    Desc = "Ajusta tu rapidez",
-    Step = 1,
-    Value = {Min = 16, Max = 300, Default = 16},
+    Value = {Min = 16, Max = 250, Default = 16},
     Callback = function(v)
         game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v
     end,
 })
 
--- Toggle de Salto Infinito
-PlayerSection:Toggle({
+PlayerGroup:Toggle({
     Title = "Salto Infinito",
-    Desc = "Salta sin límites",
     Callback = function(state)
         _G.InfJump = state
     end,
@@ -73,9 +73,8 @@ game:GetService("UserInputService").JumpRequest:Connect(function()
     end
 end)
 
--- Notificación al cargar
 WindUI:Notify({
-    Title = "Hub Cargado",
-    Content = "Todo listo para la acción.",
+    Title = "NC HUB",
+    Content = "Script cargado con éxito.",
     Duration = 5
 })
