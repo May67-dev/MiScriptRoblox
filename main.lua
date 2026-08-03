@@ -129,7 +129,7 @@ MovTab:Slider({
     Step = 1,
     Value = {
         Min = 16,
-        Max = 500,
+        Max = 128,
         Default = 16
     },
     Callback = function(v)
