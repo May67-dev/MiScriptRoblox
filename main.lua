@@ -107,7 +107,7 @@ CheatTab:Toggle({
     end
 })
 
--- 5. PESTAÑA: VUELO (Fly 3D Total - Sube y Baja)
+-- 5. PESTAÑA: VUELO (Fly con Modo Shift Lock)
 local FlyTab = SeccionTrampas:Tab({
     Title = "Vuelo",
     Icon = "solar:plain-bold"
@@ -131,7 +131,7 @@ FlyTab:Slider({
 
 FlyTab:Toggle({
     Title = "Activar Vuelo",
-    Desc = "Mira arriba para subir, abajo para bajar",
+    Desc = "Modo Shift Lock (Cuerpo sigue a la cámara)",
     Callback = function(state)
         VueloActivo = state
         local player = game.Players.LocalPlayer
@@ -156,33 +156,30 @@ FlyTab:Toggle({
             bg.Name = "FlyGyro"
             bg.Parent = root
             bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
-            bg.P = 10000 
+            bg.P = 15000 -- Un poco más de fuerza para que gire rápido
             
             task.spawn(function()
                 while VueloActivo do
+                    -- BLOQUEO DE CÁMARA (Shift Lock):
+                    -- El personaje siempre mira exactamente a donde mira la cámara
+                    bg.CFrame = camera.CFrame
+                    
                     local moveDir = hum.MoveDirection
                     if moveDir.Magnitude > 0 then
-                        -- LÓGICA 3D:
-                        -- Detectamos cuánto pulsas adelante/atrás y cuánto izquierda/derecha
+                        -- Lógica 3D de movimiento
                         local look = camera.CFrame.LookVector
                         local right = camera.CFrame.RightVector
                         
-                        -- Calculamos la dirección horizontal para comparar
                         local forwardVec = Vector3.new(look.X, 0, look.Z).Unit
                         local rightVec = Vector3.new(right.X, 0, right.Z).Unit
                         
                         local forwardAmount = moveDir:Dot(forwardVec)
                         local rightAmount = moveDir:Dot(rightVec)
                         
-                        -- Aplicamos la dirección 3D real de la cámara
                         local finalDir = (look * forwardAmount) + (right * rightAmount)
                         bv.Velocity = finalDir.Unit * VelocidadVuelo
-                        
-                        -- El personaje se inclina hacia donde vuela
-                        bg.CFrame = CFrame.new(root.Position, root.Position + finalDir)
                     else
                         bv.Velocity = Vector3.new(0, 0, 0)
-                        bg.CFrame = CFrame.new(root.Position, root.Position + camera.CFrame.LookVector)
                     end
                     task.wait()
                 end
