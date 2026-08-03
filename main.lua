@@ -303,6 +303,11 @@ local DebugSection = HABTab:Section({
     BoxBorder = true
 })
 
+local ListaWorkspace = ""
+local ListaRS = ""
+local ListaObjetos = ""
+local ListaRemotes = ""
+
 DebugSection:Button({
     Title = "Listar Workspace",
     Callback = function()
@@ -311,16 +316,29 @@ DebugSection:Button({
         for _, o in ipairs(game.Workspace:GetChildren()) do
             table.insert(l, "- " .. o.Name)
         end
-        local contenido = table.concat(l, string.char(10))
+        ListaWorkspace = table.concat(l, string.char(10))
         WindUI:Notify({
             Title = "HAB",
-            Content = contenido
+            Content = ListaWorkspace
         })
-        setclipboard(contenido)
-        WindUI:Notify({
-            Title = "HAB",
-            Content = "Copiado al portapapeles!"
-        })
+    end
+})
+
+DebugSection:Button({
+    Title = "Copiar Workspace",
+    Callback = function()
+        if ListaWorkspace ~= "" then
+            setclipboard(ListaWorkspace)
+            WindUI:Notify({
+                Title = "HAB",
+                Content = "Copiado!"
+            })
+        else
+            WindUI:Notify({
+                Title = "HAB",
+                Content = "Primero dale a Listar Workspace"
+            })
+        end
     end
 })
 
@@ -332,16 +350,29 @@ DebugSection:Button({
         for _, o in ipairs(game.ReplicatedStorage:GetChildren()) do
             table.insert(l, "- " .. o.Name)
         end
-        local contenido = table.concat(l, string.char(10))
+        ListaRS = table.concat(l, string.char(10))
         WindUI:Notify({
             Title = "HAB",
-            Content = contenido
+            Content = ListaRS
         })
-        setclipboard(contenido)
-        WindUI:Notify({
-            Title = "HAB",
-            Content = "Copiado al portapapeles!"
-        })
+    end
+})
+
+DebugSection:Button({
+    Title = "Copiar ReplicatedStorage",
+    Callback = function()
+        if ListaRS ~= "" then
+            setclipboard(ListaRS)
+            WindUI:Notify({
+                Title = "HAB",
+                Content = "Copiado!"
+            })
+        else
+            WindUI:Notify({
+                Title = "HAB",
+                Content = "Primero dale a Listar"
+            })
+        end
     end
 })
 
@@ -356,16 +387,29 @@ DebugSection:Button({
                 table.insert(l, "+ " .. o.Name)
             end
         end
-        local contenido = table.concat(l, string.char(10))
+        ListaObjetos = table.concat(l, string.char(10))
         WindUI:Notify({
             Title = "HAB",
-            Content = contenido
+            Content = ListaObjetos
         })
-        setclipboard(contenido)
-        WindUI:Notify({
-            Title = "HAB",
-            Content = "Copiado al portapapeles!"
-        })
+    end
+})
+
+DebugSection:Button({
+    Title = "Copiar Objetos",
+    Callback = function()
+        if ListaObjetos ~= "" then
+            setclipboard(ListaObjetos)
+            WindUI:Notify({
+                Title = "HAB",
+                Content = "Copiado!"
+            })
+        else
+            WindUI:Notify({
+                Title = "HAB",
+                Content = "Primero dale a Buscar Objetos"
+            })
+        end
     end
 })
 
@@ -379,16 +423,29 @@ DebugSection:Button({
                 table.insert(l, "- " .. o.Name)
             end
         end
-        local contenido = table.concat(l, string.char(10))
+        ListaRemotes = table.concat(l, string.char(10))
         WindUI:Notify({
             Title = "HAB",
-            Content = contenido
+            Content = ListaRemotes
         })
-        setclipboard(contenido)
-        WindUI:Notify({
-            Title = "HAB",
-            Content = "Copiado al portapapeles!"
-        })
+    end
+})
+
+DebugSection:Button({
+    Title = "Copiar Remotes",
+    Callback = function()
+        if ListaRemotes ~= "" then
+            setclipboard(ListaRemotes)
+            WindUI:Notify({
+                Title = "HAB",
+                Content = "Copiado!"
+            })
+        else
+            WindUI:Notify({
+                Title = "HAB",
+                Content = "Primero dale a Buscar Remotes"
+            })
+        end
     end
 })
 
