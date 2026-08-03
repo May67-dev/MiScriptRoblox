@@ -280,3 +280,152 @@ SysTab:Button({
         Window:Destroy()
     end
 })
+
+-- ==========================================
+-- SECCIÓN: JUEGOS
+-- ==========================================
+local SeccionJuegos = Window:Section({
+    Title = "JUEGOS"
+})
+
+-- ----------------------------------------
+-- MM2 (Murder Mystery 2)
+-- PlaceId principal: 142823291
+-- ----------------------------------------
+local MM2_PLACE_ID = 142823291
+local enMM2 = (game.PlaceId == MM2_PLACE_ID)
+
+local MM2Tab = SeccionJuegos:Tab({
+    Title = "MM2",
+    Icon = "solar:knife-bold-duotone"
+})
+
+-- Aviso si no estás en el juego
+MM2Tab:Section({
+    Title = enMM2 and "✅ Estás en Murder Mystery 2" or "⚠️ Entra a MM2 para usar estas opciones"
+})
+
+MM2Tab:Section({
+    Title = "PlaceId: " .. tostring(game.PlaceId)
+})
+
+-- --- UTILIDADES MM2 ---
+local CardMM2Util = MM2Tab:Section({
+    Title = "🛠️ UTILIDADES",
+    Box = true,
+    BoxBorder = true
+})
+
+CardMM2Util:Button({
+    Title = "Teleport al Lobby",
+    Callback = function()
+        if not enMM2 then
+            WindUI:Notify({ Title = "MM2", Content = "Debes estar en Murder Mystery 2" })
+            return
+        end
+        WindUI:Notify({ Title = "MM2", Content = "Teleport Lobby (añade tu lógica)" })
+    end
+})
+
+CardMM2Util:Button({
+    Title = "Recoger Arma (Gun)",
+    Callback = function()
+        if not enMM2 then
+            WindUI:Notify({ Title = "MM2", Content = "Debes estar en Murder Mystery 2" })
+            return
+        end
+        WindUI:Notify({ Title = "MM2", Content = "Grab Gun (añade tu lógica)" })
+    end
+})
+
+-- --- VISUALES MM2 ---
+local CardMM2Visual = MM2Tab:Section({
+    Title = "👁️ VISUALES",
+    Box = true,
+    BoxBorder = true
+})
+
+local MM2_ESP = false
+CardMM2Visual:Toggle({
+    Title = "ESP Roles (Murderer / Sheriff)",
+    Callback = function(state)
+        MM2_ESP = state
+        if not enMM2 then
+            WindUI:Notify({ Title = "MM2", Content = "Debes estar en Murder Mystery 2" })
+            return
+        end
+        WindUI:Notify({
+            Title = "MM2 ESP",
+            Content = state and "ESP activado (añade tu lógica)" or "ESP desactivado"
+        })
+    end
+})
+
+-- --- COMBATE MM2 ---
+local CardMM2Combat = MM2Tab:Section({
+    Title = "⚔️ COMBATE",
+    Box = true,
+    BoxBorder = true
+})
+
+local MM2_KillAura = false
+CardMM2Combat:Toggle({
+    Title = "Kill Aura (Murderer)",
+    Callback = function(state)
+        MM2_KillAura = state
+        if not enMM2 then
+            WindUI:Notify({ Title = "MM2", Content = "Debes estar en Murder Mystery 2" })
+            return
+        end
+        WindUI:Notify({
+            Title = "MM2",
+            Content = state and "Kill Aura ON (añade tu lógica)" or "Kill Aura OFF"
+        })
+    end
+})
+
+CardMM2Combat:Slider({
+    Title = "Rango Kill Aura",
+    Step = 1,
+    Value = {
+        Min = 5,
+        Max = 50,
+        Default = 15
+    },
+    Callback = function(v)
+        getgenv().MM2_KillAuraRange = v
+    end
+})
+
+-- --- FARM MM2 ---
+local CardMM2Farm = MM2Tab:Section({
+    Title = "💰 FARM",
+    Box = true,
+    BoxBorder = true
+})
+
+local MM2_AutoCoins = false
+CardMM2Farm:Toggle({
+    Title = "Auto Farm Coins",
+    Callback = function(state)
+        MM2_AutoCoins = state
+        if not enMM2 then
+            WindUI:Notify({ Title = "MM2", Content = "Debes estar en Murder Mystery 2" })
+            return
+        end
+        WindUI:Notify({
+            Title = "MM2 Farm",
+            Content = state and "Auto Coins ON (añade tu lógica)" or "Auto Coins OFF"
+        })
+    end
+})
+
+task.spawn(function()
+    while true do
+        if MM2_AutoCoins and enMM2 then
+            -- Aquí tu lógica de farm de monedas
+            pcall(function() end)
+        end
+        task.wait(0.5)
+    end
+end)
