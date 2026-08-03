@@ -1,38 +1,53 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
 
-local Window = Rayfield:CreateWindow({
-   Name = "Nc Hub",
-   LoadingTitle = "Cargando Script...",
-   LoadingSubtitle = "Nc Hub",
-   ConfigurationSaving = {
-      Enabled = true,
-      FolderName = "MisScripts",
-      FileName = "ConfigPrincipal"
-   },
-   KeySystem = false -- Ponlo en true si quieres ponerle contraseña
+-- CREACIÓN DE VENTANA
+local Window = WindUI:CreateWindow({
+    Title = "ESCRIBE_NOMBRE",
+    Author = "TU_NOMBRE",
+    Folder = "MiConfig",
+    Icon = "solar:ghost-bold",
+    Theme = "Dark",
+    NewElements = true,
+    Topbar = {
+        Height = 44,
+        ButtonsType = "Mac"
+    }
 })
 
--- Pestaña de Información (Igual a la de tu foto)
-local InfoTab = Window:CreateTab("Info", 4483362458) -- Icono de Info
-
-local Section = InfoTab:CreateSection("Discord 🎉")
-
-InfoTab:CreateButton({
-   Name = "Próximamente 👻",
-   Callback = function()
-      -- Aquí pondrías el link
-      print("Link copiado")
-   end,
+-- SECCIÓN LATERAL
+local MiSeccion = Window:Section({
+    Title = "CATEGORIA"
 })
 
--- Pestaña de Funciones
-local MainTab = Window:CreateTab("Main", 4483362458) -- Icono de Gamepad
-
-MainTab:CreateButton({
-   Name = "Velocidad (Speed) 100",
-   Callback = function()
-      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 100
-   end,
+-- PESTAÑA
+local MiPestana = MiSeccion:Tab({
+    Title = "INICIO",
+    Icon = "solar:home-2-bold"
 })
 
--- Barra de búsqueda (Rayfield la trae por defecto en las pestañas)
+-- GRUPO (Contenedor de botones)
+local MiGrupo = MiPestana:Group({
+    Title = "AJUSTES"
+})
+
+-- SLIDER (Aquí corregimos el bug del texto vertical)
+MiGrupo:Slider({
+    Title = "Velocidad", -- Mantén los nombres cortos para evitar el bug
+    Step = 1,
+    Value = {
+        Min = 16,
+        Max = 300,
+        Default = 16
+    },
+    Callback = function(valor)
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = valor
+    end
+})
+
+-- BOTÓN
+MiGrupo:Button({
+    Title = "BOTON_1",
+    Callback = function()
+        -- Tu código aquí
+    end
+})
