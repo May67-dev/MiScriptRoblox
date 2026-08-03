@@ -107,7 +107,7 @@ CheatTab:Toggle({
     end
 })
 
--- 5. PESTAÑA: VUELO (Fly Profesional)
+-- 5. PESTAÑA: VUELO (Fly con Animación Pro)
 local FlyTab = SeccionTrampas:Tab({
     Title = "Vuelo",
     Icon = "solar:plain-bold"
@@ -131,7 +131,7 @@ FlyTab:Slider({
 
 FlyTab:Toggle({
     Title = "Activar Vuelo",
-    Desc = "Joystick para moverte, Cámara para subir/bajar",
+    Desc = "Pose de vuelo activada (Sin animación de caída)",
     Callback = function(state)
         VueloActivo = state
         local player = game.Players.LocalPlayer
@@ -143,6 +143,9 @@ FlyTab:Toggle({
         if VueloActivo then
             if root:FindFirstChild("FlyForce") then root.FlyForce:Destroy() end
             
+            -- ESTO CORRIGE LA ANIMACIÓN:
+            hum.PlatformStand = true -- Congela la animación de caída
+            
             local bv = Instance.new("BodyVelocity")
             bv.Name = "FlyForce"
             bv.Parent = root
@@ -153,21 +156,23 @@ FlyTab:Toggle({
                 while VueloActivo do
                     local moveDir = hum.MoveDirection
                     if moveDir.Magnitude > 0 then
-                        -- Calculamos la dirección horizontal de la cámara
                         local camLook = camera.CFrame.LookVector
                         local camHorizontal = Vector3.new(camLook.X, 0, camLook.Z).Unit
-                        
-                        -- Detectamos si vas hacia adelante o atrás respecto a la cámara
                         local forwardAmount = moveDir:Dot(camHorizontal)
-                        
-                        -- Combinamos movimiento del joystick con inclinación de cámara
                         local finalVelocity = (moveDir + Vector3.new(0, camLook.Y * forwardAmount, 0)).Unit
                         bv.Velocity = finalVelocity * VelocidadVuelo
+                        
+                        -- Opcional: Hace que el personaje se incline hacia donde vuela
+                        root.CFrame = CFrame.new(root.Position, root.Position + finalVelocity)
                     else
                         bv.Velocity = Vector3.new(0, 0, 0)
                     end
                     task.wait()
                 end
+                
+                -- AL APAGAR: Restauramos todo a la normalidad
+                hum.PlatformStand = false 
+                hum:ChangeState(Enum.HumanoidStateType.GettingUp)
                 if root:FindFirstChild("FlyForce") then root.FlyForce:Destroy() end
             end)
         end
