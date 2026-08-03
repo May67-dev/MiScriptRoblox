@@ -107,44 +107,103 @@ CheatTab:Toggle({
     end
 })
 
--- 5. PESTAÑA: VUELO
+-- 5. PESTAÑA: VUELO (Fly Inteligente)
 local FlyTab = SeccionTrampas:Tab({
     Title = "Vuelo",
     Icon = "solar:plain-bold"
 })
 
--- Variable para controlar el estado (ponla justo antes del Toggle)
+-- Variables de control para el vuelo
 local VueloActivo = false
-local VelocidadVuelo = 50
+local VelocidadVuelo = 80
 
+-- Añadimos un Slider para que puedas cambiar la velocidad de vuelo
+FlyTab:Slider({
+    Title = "Velocidad de Vuelo",
+    Step = 1,
+    Value = {
+        Min = 10,
+        Max = 400,
+        Default = 80
+    },
+    Callback = function(v)
+        VelocidadVuelo = v
+    end
+})
+
+-- Toggle de Vuelo Inteligente
 FlyTab:Toggle({
     Title = "Activar Vuelo",
-    Desc = "Mueve el joystick para flotar",
+    Desc = "Solo te mueves si usas el Joystick",
     Callback = function(state)
         VueloActivo = state
         local player = game.Players.LocalPlayer
         local character = player.Character or player.CharacterAdded:Wait()
         local root = character:WaitForChild("HumanoidRootPart")
+        local hum = character:WaitForChild("Humanoid")
         
         if VueloActivo then
-            -- Crea la fuerza física para flotar
+            -- Si ya había una fuerza, la borramos para no duplicar
+            if root:FindFirstChild("FlyForce") then
+                root.FlyForce:Destroy()
+            end
+            
             local bv = Instance.new("BodyVelocity")
             bv.Name = "FlyForce"
             bv.Parent = root
-            bv.Velocity = Vector3.new(0, 0, 0)
             bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+            bv.Velocity = Vector3.new(0, 0, 0)
             
-            -- Hilo que actualiza la dirección hacia donde miras
             task.spawn(function()
                 while VueloActivo do
-                    bv.Velocity = workspace.CurrentCamera.CFrame.LookVector * VelocidadVuelo
+                    -- Detecta si estás moviendo el Joystick del celular
+                    if hum.MoveDirection.Magnitude > 0 then
+                        bv.Velocity = workspace.CurrentCamera.CFrame.LookVector * VelocidadVuelo
+                    else
+                        -- Si no tocas el joystick, te quedas flotando en el sitio
+                        bv.Velocity = Vector3.new(0, 0, 0)
+                    end
                     task.wait()
                 end
+                -- Al apagar, borramos la fuerza para caer al suelo
                 if root:FindFirstChild("FlyForce") then
                     root.FlyForce:Destroy()
                 end
             end)
         end
+    end
+})
+
+-- 6. PESTAÑA: SISTEMA (Ajustes finales)
+local SeccionSistema = Window:Section({
+    Title = "SISTEMA"
+})
+
+local SysTab = SeccionSistema:Tab({
+    Title = "Ajustes",
+    Icon = "solar:settings-bold"
+})
+
+SysTab:Button({
+    Title = "Activar Anti-AFK",
+    Callback = function()
+        local vu = game:GetService("VirtualUser")
+        game.Players.LocalPlayer.Idled:Connect(function()
+            vu:Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
+            task.wait(1)
+            vu:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
+        end)
+        WindUI:Notify({
+            Title = "Sistema",
+            Content = "Anti-AFK Activado"
+        })
+    end
+})
+
+SysTab:Button({
+    Title = "Cerrar Hub",
+    Callback = function()
+        Window:Destroy()
     end
 })
 
