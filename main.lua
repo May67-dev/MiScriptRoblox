@@ -1,4 +1,4 @@
--- REGISTRO DE TIEMPO (Para la sesión)
+-- REGISTRO DE TIEMPO
 local TiempoInicio = os.time()
 
 local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
@@ -10,7 +10,7 @@ local Window = WindUI:CreateWindow({
     Folder = "May67Scripts",
     Icon = "solar:bolt-bold",
     Theme = "Dark",
-    Size = UDim2.fromOffset(580, 420),
+    Size = UDim2.fromOffset(600, 450), -- Tamaño extra para evitar bugs
     NewElements = true,
     Topbar = {
         Height = 44,
@@ -18,9 +18,9 @@ local Window = WindUI:CreateWindow({
     }
 })
 
--- 2. SECCIONES DEL SIDEBAR
-local SeccionJugador = Window:Section({
-    Title = "JUGADOR"
+-- 2. SECCIONES DEL SIDEBAR (Organizadas como pediste)
+local SeccionHome = Window:Section({
+    Title = "HOME"
 })
 
 local SeccionTrampas = Window:Section({
@@ -32,48 +32,39 @@ local SeccionSistema = Window:Section({
 })
 
 -- ==========================================
--- 3. PESTAÑA: MI PERFIL (NUEVA)
+-- 3. PESTAÑA: INICIO (Información del Jugador)
 -- ==========================================
-local PerfilTab = SeccionJugador:Tab({
-    Title = "Mi Perfil",
-    Icon = "solar:user-circle-bold"
+local HomeTab = SeccionHome:Tab({
+    Title = "Inicio",
+    Icon = "solar:home-2-bold"
 })
 
--- Obtener Foto de Avatar
+-- Obtener Foto de Avatar (Corregido)
 local userId = game.Players.LocalPlayer.UserId
 local thumbType = Enum.ThumbnailType.HeadShot
 local thumbSize = Enum.ThumbnailSize.Size420x420
 local fotoUrl, listo = game.Players:GetUserThumbnailAsync(userId, thumbType, thumbSize)
 
--- Mostrar Foto Redonda
-PerfilTab:Image({
+HomeTab:Image({
     Image = fotoUrl,
     AspectRatio = "1:1",
-    Radius = 100
+    Radius = 100 -- Foto redonda
 })
 
--- Datos del Jugador
-PerfilTab:Section({
+HomeTab:Section({
     Title = "Usuario: " .. game.Players.LocalPlayer.Name
 })
 
-PerfilTab:Section({
-    Title = "ID: " .. userId
-})
-
--- Etiqueta de Tiempo de Sesión
-local TimeLabel = PerfilTab:Section({
+local TimeLabel = HomeTab:Section({
     Title = "Sesión: 0h 0m 0s"
 })
 
--- Bucle para actualizar el tiempo
 task.spawn(function()
     while true do
         local segundos = os.time() - TiempoInicio
         local mins = math.floor(segundos / 60)
         local horas = math.floor(mins / 60)
         local texto = string.format("%dh %dm %ds", horas, mins % 60, segundos % 60)
-        
         pcall(function()
             TimeLabel:SetTitle("Sesión: " .. texto)
         end)
@@ -82,9 +73,9 @@ task.spawn(function()
 end)
 
 -- ==========================================
--- 4. PESTAÑA: MOVIMIENTO
+-- 4. PESTAÑA: MOVIMIENTO (Ahora en Trampas)
 -- ==========================================
-local MovTab = SeccionJugador:Tab({
+local MovTab = SeccionTrampas:Tab({
     Title = "Movimiento",
     Icon = "solar:walking-bold"
 })
@@ -157,7 +148,7 @@ CheatTab:Toggle({
 })
 
 -- ==========================================
--- 6. PESTAÑA: VUELO (Fly Pro)
+-- 6. PESTAÑA: VUELO (Con Slider recuperado)
 -- ==========================================
 local FlyTab = SeccionTrampas:Tab({
     Title = "Vuelo",
@@ -166,6 +157,19 @@ local FlyTab = SeccionTrampas:Tab({
 
 local VueloActivo = false
 local VelocidadVuelo = 80
+
+FlyTab:Slider({
+    Title = "Velocidad Vuelo",
+    Step = 1,
+    Value = {
+        Min = 10,
+        Max = 400,
+        Default = 80
+    },
+    Callback = function(v)
+        VelocidadVuelo = v
+    end
+})
 
 FlyTab:Toggle({
     Title = "Activar Vuelo",
