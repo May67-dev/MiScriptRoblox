@@ -323,7 +323,16 @@ CardMM2Util:Button({
             WindUI:Notify({ Title = "MM2", Content = "Debes estar en Murder Mystery 2" })
             return
         end
-        WindUI:Notify({ Title = "MM2", Content = "Teleport Lobby (añade tu lógica)" })
+        local Players = game:GetService("Players")
+        local LP = Players.LocalPlayer
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local chatRemote = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents") or ReplicatedStorage:FindFirstChild("ChatEvents")
+        -- Método 1: teleport usando "Lobby" si existe en TeleportService
+        local TeleportService = game:GetService("TeleportService")
+        pcall(function()
+            TeleportService:Teleport(MM2_PLACE_ID, LP)
+        end)
+        WindUI:Notify({ Title = "MM2", Content = "Teleport al Lobby enviado" })
     end
 })
 
@@ -334,7 +343,29 @@ CardMM2Util:Button({
             WindUI:Notify({ Title = "MM2", Content = "Debes estar en Murder Mystery 2" })
             return
         end
-        WindUI:Notify({ Title = "MM2", Content = "Grab Gun (añade tu lógica)" })
+        local LP = game.Players.LocalPlayer
+        local Character = LP.Character or LP.CharacterAdded:Wait()
+        local Root = Character:FindFirstChild("HumanoidRootPart")
+        if not Root then return end
+
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local Remote = ReplicatedStorage:FindFirstChild("GrabGun") or ReplicatedStorage:FindFirstChild("GrabGunRemote") or ReplicatedStorage:FindFirstChild("ToolRemote")
+
+        -- Buscar armas en el suelo
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("Tool") and obj.Name:match("Gun") then
+                Root.CFrame = obj.CFrame * CFrame.new(0, 0, 2)
+                if Remote then
+                    pcall(function() Remote:FireServer(obj) end)
+                else
+                    -- Fallback: tocar la herramienta
+                    LP.Character.Humanoid:EquipTool(obj)
+                end
+                WindUI:Notify({ Title = "MM2", Content = "Intentando recoger arma..." })
+                return
+            end
+        end
+        WindUI:Notify({ Title = "MM2", Content = "No hay armas cerca" })
     end
 })
 
@@ -354,9 +385,40 @@ CardMM2Visual:Toggle({
             WindUI:Notify({ Title = "MM2", Content = "Debes estar en Murder Mystery 2" })
             return
         end
+
+        -- Limpiar ESP previo
+        for _, p in ipairs(game.Players:GetPlayers()) do
+            if p ~= game.Players.LocalPlayer and p.Character then
+                if p.Character:FindFirstChild("MM2Highlight") then
+                    p.Character.MM2Highlight:Destroy()
+                end
+            end
+        end
+
+        if state then
+            for _, p in ipairs(game.Players:GetPlayers()) do
+                if p ~= game.Players.LocalPlayer and p.Character then
+                    local root = p.Character:FindFirstChild("HumanoidRootPart")
+                    if root then
+                        local h = Instance.new("Highlight")
+                        h.Name = "MM2Highlight"
+                        h.Parent = root
+
+                        -- Color según rol (si existe el tag)
+                        if p.Character:FindFirstChild("Murderer") or p.Character:FindFirstChild("IsMurderer") then
+                            h.FillColor = Color3.fromRGB(255, 0, 0) -- Rojo = Murderer
+                        elseif p.Character:FindFirstChild("Sheriff") or p.Character:FindFirstChild("IsSheriff") then
+                            h.FillColor = Color3.fromRGB(0, 100, 255) -- Azul = Sheriff
+                        else
+                            h.FillColor = Color3.fromRGB(255, 255, 255) -- Blanco = Inocente
+                        end
+                    end
+                end
+            end
+        end
         WindUI:Notify({
             Title = "MM2 ESP",
-            Content = state and "ESP activado (añade tu lógica)" or "ESP desactivado"
+            Content = state and "ESP activado" or "ESP desactivado"
         })
     end
 })
@@ -369,6 +431,8 @@ local CardMM2Combat = MM2Tab:Section({
 })
 
 local MM2_KillAura = false
+local MM2_KillAuraRange = 20
+
 CardMM2Combat:Toggle({
     Title = "Kill Aura (Murderer)",
     Callback = function(state)
@@ -379,7 +443,7 @@ CardMM2Combat:Toggle({
         end
         WindUI:Notify({
             Title = "MM2",
-            Content = state and "Kill Aura ON (añade tu lógica)" or "Kill Aura OFF"
+            Content = state and "Kill Aura ON" or "Kill Aura OFF"
         })
     end
 })
@@ -390,12 +454,42 @@ CardMM2Combat:Slider({
     Value = {
         Min = 5,
         Max = 50,
-        Default = 15
+        Default = 20
     },
     Callback = function(v)
-        getgenv().MM2_KillAuraRange = v
+        MM2_KillAuraRange = v
     end
 })
+
+-- Bucle de Kill Aura
+task.spawn(function()
+    local Players = game:GetService("Players")
+    local LP = Players.LocalPlayer
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local killRemote = ReplicatedStorage:FindFirstChild("Murderer") or ReplicatedStorage:FindFirstChild("Kill") or ReplicatedStorage:FindFirstChild("KillPlayer")
+
+    while true do
+        if MM2_KillAura and enMM2 then
+            local Character = LP.Character
+            if Character then
+                local root = Character:FindFirstChild("HumanoidRootPart")
+                if root then
+                    for _, p in ipairs(Players:GetPlayers()) do
+                        if p ~= LP and p.Character then
+                            local tRoot = p.Character:FindFirstChild("HumanoidRootPart")
+                            if tRoot and (tRoot.Position - root.Position).Magnitude <= MM2_KillAuraRange then
+                                if killRemote then
+                                    pcall(function() killRemote:FireServer(p) end)
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(0.2)
+    end
+end)
 
 -- --- FARM MM2 ---
 local CardMM2Farm = MM2Tab:Section({
@@ -415,16 +509,28 @@ CardMM2Farm:Toggle({
         end
         WindUI:Notify({
             Title = "MM2 Farm",
-            Content = state and "Auto Coins ON (añade tu lógica)" or "Auto Coins OFF"
+            Content = state and "Auto Coins ON" or "Auto Coins OFF"
         })
     end
 })
 
 task.spawn(function()
+    local LP = game.Players.LocalPlayer
+
     while true do
         if MM2_AutoCoins and enMM2 then
-            -- Aquí tu lógica de farm de monedas
-            pcall(function() end)
+            local Character = LP.Character
+            if Character then
+                local root = Character:FindFirstChild("HumanoidRootPart")
+                if root then
+                    for _, obj in ipairs(workspace:GetDescendants()) do
+                        if obj.Name:lower():find("coin") then
+                            root.CFrame = obj.CFrame * CFrame.new(0, 2, 0)
+                            task.wait(0.1)
+                        end
+                    end
+                end
+            end
         end
         task.wait(0.5)
     end
