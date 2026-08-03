@@ -282,23 +282,10 @@ SysTab:Button({
 })
 
 -- ==========================================
--- SECCIÓN: JUEGOS
+-- DEBUG UNIVERSAL - CUALQUIER JUEGO
 -- ==========================================
-local SeccionJuegos = Window:Section({
-    Title = "JUEGOS"
-})
-
--- ==========================================
--- HACK A BUSINESS
--- ==========================================
-local HABTab = SeccionJuegos:Tab({
-    Title = "Hack A Business",
-    Icon = "solar:computer-bold"
-})
-
--- Debug Section
-local DebugSection = HABTab:Section({
-    Title = "Debug",
+local DebugSection = SeccionSistema:Section({
+    Title = "Debug - Nombres Reales",
     Box = true,
     BoxBorder = true
 })
@@ -318,7 +305,7 @@ DebugSection:Button({
         end
         ListaWorkspace = table.concat(l, string.char(10))
         WindUI:Notify({
-            Title = "HAB",
+            Title = "Debug",
             Content = ListaWorkspace
         })
     end
@@ -330,12 +317,12 @@ DebugSection:Button({
         if ListaWorkspace ~= "" then
             setclipboard(ListaWorkspace)
             WindUI:Notify({
-                Title = "HAB",
+                Title = "Debug",
                 Content = "Copiado!"
             })
         else
             WindUI:Notify({
-                Title = "HAB",
+                Title = "Debug",
                 Content = "Primero dale a Listar Workspace"
             })
         end
@@ -352,7 +339,7 @@ DebugSection:Button({
         end
         ListaRS = table.concat(l, string.char(10))
         WindUI:Notify({
-            Title = "HAB",
+            Title = "Debug",
             Content = ListaRS
         })
     end
@@ -364,12 +351,12 @@ DebugSection:Button({
         if ListaRS ~= "" then
             setclipboard(ListaRS)
             WindUI:Notify({
-                Title = "HAB",
+                Title = "Debug",
                 Content = "Copiado!"
             })
         else
             WindUI:Notify({
-                Title = "HAB",
+                Title = "Debug",
                 Content = "Primero dale a Listar"
             })
         end
@@ -383,13 +370,13 @@ DebugSection:Button({
         table.insert(l, "OBJETOS:")
         for _, o in ipairs(game.Workspace:GetDescendants()) do
             local n = o.Name:lower()
-            if n:find("data") or n:find("server") or n:find("antenna") or n:find("base") or n:find("sell") or n:find("collect") then
+            if n:find("data") or n:find("server") or n:find("antenna") or n:find("base") or n:find("sell") or n:find("collect") or n:find("steal") or n:find("hack") or n:find("buy") or n:find("place") or n:find("cash") or n:find("money") or n:find("item") or n:find("product") then
                 table.insert(l, "+ " .. o.Name)
             end
         end
         ListaObjetos = table.concat(l, string.char(10))
         WindUI:Notify({
-            Title = "HAB",
+            Title = "Debug",
             Content = ListaObjetos
         })
     end
@@ -401,12 +388,12 @@ DebugSection:Button({
         if ListaObjetos ~= "" then
             setclipboard(ListaObjetos)
             WindUI:Notify({
-                Title = "HAB",
+                Title = "Debug",
                 Content = "Copiado!"
             })
         else
             WindUI:Notify({
-                Title = "HAB",
+                Title = "Debug",
                 Content = "Primero dale a Buscar Objetos"
             })
         end
@@ -425,7 +412,7 @@ DebugSection:Button({
         end
         ListaRemotes = table.concat(l, string.char(10))
         WindUI:Notify({
-            Title = "HAB",
+            Title = "Debug",
             Content = ListaRemotes
         })
     end
@@ -437,19 +424,35 @@ DebugSection:Button({
         if ListaRemotes ~= "" then
             setclipboard(ListaRemotes)
             WindUI:Notify({
-                Title = "HAB",
+                Title = "Debug",
                 Content = "Copiado!"
             })
         else
             WindUI:Notify({
-                Title = "HAB",
+                Title = "Debug",
                 Content = "Primero dale a Buscar Remotes"
             })
         end
     end
 })
 
--- Auto Section
+-- ==========================================
+-- SECCIÓN: JUEGOS
+-- ==========================================
+local SeccionJuegos = Window:Section({
+    Title = "JUEGOS"
+})
+
+-- ==========================================
+
+-- ==========================================
+-- HACK A BUSINESS
+-- ==========================================
+local HABTab = SeccionJuegos:Tab({
+    Title = "Hack A Business",
+    Icon = "solar:computer-bold"
+})
+
 local AutoSection = HABTab:Section({
     Title = "Auto",
     Box = true,
@@ -487,46 +490,43 @@ task.spawn(function()
     local RS = game.ReplicatedStorage
     local WS = game.Workspace
     
+    local PickUpRemote = RS:FindFirstChild("PickUpObject")
+    local SellRemote = RS:FindFirstChild("SellObject")
+    
     while true do
         local Char = LP.Character
         local Root = Char and Char:FindFirstChild("HumanoidRootPart")
         
         if Root and Char then
-            if AutoCollect then
+            -- Auto Collect: recoger Servers
+            if AutoCollect and PickUpRemote then
                 for _, obj in ipairs(WS:GetDescendants()) do
-                    if obj.Name:lower():find("data") or obj.Name:lower():find("server") then
-                        local cf = obj.CFrame or obj:GetPivot()
-                        if cf then
-                            Root.CFrame = cf * CFrame.new(0, 3, 0)
-                        end
+                    if obj.Name == "Server" or obj.Name == "toxic-server" then
+                        pcall(function()
+                            PickUpRemote:FireServer(obj)
+                        end)
                     end
                 end
             end
             
+            -- Auto Steal: buscar Bases y Antennas (falta remote de robar)
             if AutoSteal then
-                local rem = RS:FindFirstChild("Steal") or RS:FindFirstChild("Hack") or RS:FindFirstChild("Rob")
-                if rem then
-                    for _, obj in ipairs(WS:GetDescendants()) do
-                        if obj.Name:lower():find("antenna") or obj.Name:lower():find("base") then
-                            pcall(function() rem:FireServer(obj) end)
-                        end
-                    end
-                end
+                -- Aqui iría el remote de robar cuando lo encontremos
             end
             
-            if SellBest then
-                local rem = RS:FindFirstChild("Sell") or RS:FindFirstChild("Drop")
-                if rem then
-                    pcall(function() rem:FireServer() end)
-                end
+            -- Sell Best Zone: vender con SellObject
+            if SellBest and SellRemote then
+                pcall(function()
+                    SellRemote:FireServer()
+                end)
             end
         end
         
-        task.wait(0.3)
+        task.wait(0.2)
     end
 end)
 
--- Utilities
+-- Utilidades
 local UtilSection = HABTab:Section({
     Title = "Utilidades",
     Box = true,
