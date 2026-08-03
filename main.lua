@@ -107,7 +107,7 @@ CheatTab:Toggle({
     end
 })
 
--- 5. PESTAÑA: VUELO (Fly con Despegue Automático)
+-- 5. PESTAÑA: VUELO (Fly 3D Total - Sube y Baja)
 local FlyTab = SeccionTrampas:Tab({
     Title = "Vuelo",
     Icon = "solar:plain-bold"
@@ -131,7 +131,7 @@ FlyTab:Slider({
 
 FlyTab:Toggle({
     Title = "Activar Vuelo",
-    Desc = "Despegue automático al activar",
+    Desc = "Mira arriba para subir, abajo para bajar",
     Callback = function(state)
         VueloActivo = state
         local player = game.Players.LocalPlayer
@@ -141,15 +141,11 @@ FlyTab:Toggle({
         local camera = workspace.CurrentCamera
         
         if VueloActivo then
-            -- 1. LIMPIEZA DE FUERZAS PREVIAS
             if root:FindFirstChild("FlyForce") then root.FlyForce:Destroy() end
             if root:FindFirstChild("FlyGyro") then root.FlyGyro:Destroy() end
             
-            -- 2. DESPEGUE INICIAL (El secreto para no quedarse pegado al suelo)
-            root.CFrame = root.CFrame * CFrame.new(0, 5, 0) -- Te sube 5 metros al instante
             hum.PlatformStand = true 
             
-            -- 3. FUERZAS DE VUELO
             local bv = Instance.new("BodyVelocity")
             bv.Name = "FlyForce"
             bv.Parent = root
@@ -161,26 +157,36 @@ FlyTab:Toggle({
             bg.Parent = root
             bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
             bg.P = 10000 
-            bg.CFrame = root.CFrame
             
             task.spawn(function()
                 while VueloActivo do
                     local moveDir = hum.MoveDirection
                     if moveDir.Magnitude > 0 then
-                        -- Movimiento basado en cámara y joystick
-                        local lookCF = camera.CFrame
-                        local direction = lookCF:VectorToWorldSpace(lookCF:VectorToObjectSpace(moveDir))
-                        bv.Velocity = direction * VelocidadVuelo
-                        bg.CFrame = CFrame.new(root.Position, root.Position + direction)
+                        -- LÓGICA 3D:
+                        -- Detectamos cuánto pulsas adelante/atrás y cuánto izquierda/derecha
+                        local look = camera.CFrame.LookVector
+                        local right = camera.CFrame.RightVector
+                        
+                        -- Calculamos la dirección horizontal para comparar
+                        local forwardVec = Vector3.new(look.X, 0, look.Z).Unit
+                        local rightVec = Vector3.new(right.X, 0, right.Z).Unit
+                        
+                        local forwardAmount = moveDir:Dot(forwardVec)
+                        local rightAmount = moveDir:Dot(rightVec)
+                        
+                        -- Aplicamos la dirección 3D real de la cámara
+                        local finalDir = (look * forwardAmount) + (right * rightAmount)
+                        bv.Velocity = finalDir.Unit * VelocidadVuelo
+                        
+                        -- El personaje se inclina hacia donde vuela
+                        bg.CFrame = CFrame.new(root.Position, root.Position + finalDir)
                     else
-                        -- Flotar quieto
                         bv.Velocity = Vector3.new(0, 0, 0)
                         bg.CFrame = CFrame.new(root.Position, root.Position + camera.CFrame.LookVector)
                     end
                     task.wait()
                 end
                 
-                -- 4. ATERRIZAJE SEGURO
                 hum.PlatformStand = false
                 if root:FindFirstChild("FlyForce") then root.FlyForce:Destroy() end
                 if root:FindFirstChild("FlyGyro") then root.FlyGyro:Destroy() end
