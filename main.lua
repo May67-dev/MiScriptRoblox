@@ -1,9 +1,9 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Nc Hub | Nc Script",
+   Name = "Nc Hub",
    LoadingTitle = "Cargando Script...",
-   LoadingSubtitle = "Nc Script",
+   LoadingSubtitle = "Nc Hub",
    ConfigurationSaving = {
       Enabled = true,
       FolderName = "MisScripts",
@@ -15,7 +15,7 @@ local Window = Rayfield:CreateWindow({
 -- Pestaña de Información (Igual a la de tu foto)
 local InfoTab = Window:CreateTab("Info", 4483362458) -- Icono de Info
 
-local Section = InfoTab:CreateSection("Discord")
+local Section = InfoTab:CreateSection("Discord 🎉")
 
 InfoTab:CreateButton({
    Name = "Próximamente 👻",
