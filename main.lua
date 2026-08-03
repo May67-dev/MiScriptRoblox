@@ -1,4 +1,6 @@
+-- ==========================================
 -- REGISTRO DE TIEMPO
+-- ==========================================
 local TiempoInicio = os.time()
 
 local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
@@ -10,7 +12,7 @@ local Window = WindUI:CreateWindow({
     Folder = "May67Scripts",
     Icon = "solar:bolt-bold",
     Theme = "Dark",
-    Size = UDim2.fromOffset(600, 450), -- Tamaño extra para evitar bugs
+    Size = UDim2.fromOffset(600, 450),
     NewElements = true,
     Topbar = {
         Height = 44,
@@ -18,7 +20,7 @@ local Window = WindUI:CreateWindow({
     }
 })
 
--- 2. SECCIONES DEL SIDEBAR (Organizadas como pediste)
+-- 2. SECCIONES DEL SIDEBAR
 local SeccionHome = Window:Section({
     Title = "HOME"
 })
@@ -32,95 +34,59 @@ local SeccionSistema = Window:Section({
 })
 
 -- ==========================================
--- 3. PESTAÑA: INICIO (Rediseño Profesional)
+-- 3. PESTAÑA: HOME (DISEÑO DE TARJETAS)
 -- ==========================================
 local HomeTab = SeccionHome:Tab({
     Title = "Inicio",
     Icon = "solar:home-2-bold"
 })
 
--- OBTENCIÓN DE DATOS DEL JUEGO Y SERVIDOR
-local MarketplaceService = game:GetService("MarketplaceService")
-local infoJuego = MarketplaceService:GetProductInfo(game.PlaceId)
-local nombreJuego = infoJuego.Name or "Juego Desconocido"
-local maxJugadores = game.Players.MaxPlayers
-local jugadoresActuales = #game.Players:GetPlayers()
-
--- --- SECCIÓN 1: PERFIL DEL JUGADOR ---
-local PerfilSection = HomeTab:Section({
-    Title = "PERFIL DEL USUARIO"
+-- Tarjeta de Perfil
+local PerfilCard = HomeTab:Section({
+    Title = "INFORMACIÓN DEL JUGADOR",
+    Box = true,
+    BoxBorder = true
 })
 
--- Intentamos la foto una última vez con un método de respaldo
 local userId = game.Players.LocalPlayer.UserId
-local fotoUrl = "https://www.roblox.com/headshot-thumbnail/image?userId="..userId.."&width=420&height=420&format=png"
-
-PerfilSection:Image({
-    Image = fotoUrl,
+PerfilCard:Image({
+    Image = "rbxthumb://type=AvatarHeadShot&id=" .. userId .. "&w=420&h=420",
     AspectRatio = "1:1",
     Radius = 100
 })
 
-PerfilSection:Section({
-    Title = "👤 Usuario: " .. game.Players.LocalPlayer.Name
+PerfilCard:Label({
+    Title = "Usuario: " .. game.Players.LocalPlayer.Name,
+    Desc = "ID: " .. userId
 })
 
-PerfilSection:Section({
-    Title = "🏷️ Apodo: " .. game.Players.LocalPlayer.DisplayName
+-- Tarjeta de Sesión
+local SesionCard = HomeTab:Section({
+    Title = "ESTADO DE SESIÓN",
+    Box = true,
+    BoxBorder = true
 })
 
-PerfilSection:Section({
-    Title = "📅 Antigüedad: " .. game.Players.LocalPlayer.AccountAge .. " días"
+local TimeLabel = SesionCard:Label({
+    Title = "Tiempo: 0h 0m 0s",
+    Desc = "Estado: Conectado"
 })
 
--- --- SECCIÓN 2: DATOS DEL JUEGO ---
-local GameSection = HomeTab:Section({
-    Title = "INFORMACIÓN DEL JUEGO"
-})
-
-GameSection:Section({
-    Title = "🎮 Jugando a: " .. nombreJuego
-})
-
-GameSection:Section({
-    Title = "🆔 Place ID: " .. game.PlaceId
-})
-
-GameSection:Section({
-    Title = "👥 Servidor: " .. jugadoresActuales .. " / " .. maxJugadores .. " jugadores"
-})
-
--- --- SECCIÓN 3: ESTADO DE SESIÓN ---
-local StatusSection = HomeTab:Section({
-    Title = "ESTADO DE SESIÓN"
-})
-
-local TimeLabel = StatusSection:Section({
-    Title = "⏳ Tiempo activo: 0h 0m 0s"
-})
-
-StatusSection:Section({
-    Title = "✅ Hub Status: Operacional"
-})
-
--- Bucle de actualización de tiempo
 task.spawn(function()
     while true do
-        local segundos = os.time() - TiempoInicio
-        local mins = math.floor(segundos / 60)
+        local seg = os.time() - TiempoInicio
+        local mins = math.floor(seg / 60)
         local horas = math.floor(mins / 60)
-        local texto = string.format("%dh %dm %ds", horas, mins % 60, segundos % 60)
-        
+        local texto = string.format("%dh %dm %ds", horas, mins % 60, seg % 60)
         pcall(function()
-            TimeLabel:SetTitle("⏳ Tiempo activo: " .. texto)
+            TimeLabel:SetTitle("Tiempo: " .. texto)
         end)
-        
         task.wait(1)
     end
 end)
 
 -- ==========================================
--- 4. PESTAÑA: MOVIMIENTO (Ahora en Trampas)
+-- 4. PESTAÑA: MOVIMIENTO (DENTRO DE TRAMPAS)
 -- ==========================================
 local MovTab = SeccionTrampas:Tab({
     Title = "Movimiento",
@@ -155,15 +121,15 @@ game:GetService("UserInputService").JumpRequest:Connect(function()
 end)
 
 -- ==========================================
--- 5. PESTAÑA: HACKS (Noclip y ESP)
+-- 5. PESTAÑA: HACKS (DENTRO DE TRAMPAS)
 -- ==========================================
-local CheatTab = SeccionTrampas:Tab({
+local HackTab = SeccionTrampas:Tab({
     Title = "Hacks",
     Icon = "solar:ghost-bold"
 })
 
 local NoclipEnabled = false
-CheatTab:Toggle({
+HackTab:Toggle({
     Title = "Atravesar Paredes",
     Callback = function(state)
         NoclipEnabled = state
@@ -178,7 +144,7 @@ game:GetService("RunService").Stepped:Connect(function()
     end
 end)
 
-CheatTab:Toggle({
+HackTab:Toggle({
     Title = "Ver Jugadores (ESP)",
     Callback = function(state)
         for _, p in pairs(game.Players:GetPlayers()) do
@@ -195,7 +161,7 @@ CheatTab:Toggle({
 })
 
 -- ==========================================
--- 6. PESTAÑA: VUELO (Con Slider recuperado)
+-- 6. PESTAÑA: VUELO (DENTRO DE TRAMPAS)
 -- ==========================================
 local FlyTab = SeccionTrampas:Tab({
     Title = "Vuelo",
@@ -240,11 +206,11 @@ FlyTab:Toggle({
                     if hum.MoveDirection.Magnitude > 0 then
                         local look = workspace.CurrentCamera.CFrame.LookVector
                         local right = workspace.CurrentCamera.CFrame.RightVector
-                        local forwardVec = Vector3.new(look.X, 0, look.Z).Unit
-                        local rightVec = Vector3.new(right.X, 0, right.Z).Unit
-                        local forwardAmount = hum.MoveDirection:Dot(forwardVec)
-                        local rightAmount = hum.MoveDirection:Dot(rightVec)
-                        bv.Velocity = ((look * forwardAmount) + (right * rightAmount)).Unit * VelocidadVuelo
+                        local fv = Vector3.new(look.X, 0, look.Z).Unit
+                        local rv = Vector3.new(right.X, 0, right.Z).Unit
+                        local fa = hum.MoveDirection:Dot(fv)
+                        local ra = hum.MoveDirection:Dot(rv)
+                        bv.Velocity = ((look * fa) + (right * ra)).Unit * VelocidadVuelo
                     else
                         bv.Velocity = Vector3.new(0, 0, 0)
                     end
