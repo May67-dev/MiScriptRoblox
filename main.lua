@@ -1,12 +1,13 @@
 local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
 
--- CREACIÓN DE VENTANA
+-- 1. CREACIÓN DE VENTANA (Con tamaño forzado)
 local Window = WindUI:CreateWindow({
-    Title = "NC HUB",
-    Author = "hidjcjgg",
-    Folder = "MiConfig",
+    Title = "MAY67 HUB",
+    Author = "by May67-dev",
+    Folder = "May67Config",
     Icon = "solar:ghost-bold",
     Theme = "Dark",
+    Size = UDim2.fromOffset(580, 400), -- Forzamos más ancho para evitar letras verticales
     NewElements = true,
     Topbar = {
         Height = 44,
@@ -14,29 +15,25 @@ local Window = WindUI:CreateWindow({
     }
 })
 
--- SECCIÓN LATERAL
-local MiSeccion = Window:Section({
-    Title = "CATEGORIA"
+-- 2. SECCIÓN LATERAL
+local SeccionLateral = Window:Section({
+    Title = "CATEGORIAS"
 })
 
--- PESTAÑA
-local MiPestana = MiSeccion:Tab({
-    Title = "INICIO",
+-- 3. PESTAÑA
+local PestanaPrincipal = SeccionLateral:Tab({
+    Title = "Principal",
     Icon = "solar:home-2-bold"
 })
 
--- GRUPO (Contenedor de botones)
-local MiGrupo = MiPestana:Group({
-    Title = "AJUSTES"
-})
-
--- SLIDER (Aquí corregimos el bug del texto vertical)
-MiGrupo:Slider({
-    Title = "Velocidad", -- Mantén los nombres cortos para evitar el bug
+-- 4. SLIDER DIRECTO (Sin Grupo para tener más espacio)
+PestanaPrincipal:Slider({
+    Title = "Velocidad",
+    Desc = "Ajustar rapidez", -- La descripción ayuda a que el layout se expanda
     Step = 1,
     Value = {
         Min = 16,
-        Max = 300,
+        Max = 500,
         Default = 16
     },
     Callback = function(valor)
@@ -44,10 +41,10 @@ MiGrupo:Slider({
     end
 })
 
--- BOTÓN
-MiGrupo:Button({
-    Title = "BOTON_1",
+-- 5. BOTÓN DE PRUEBA
+PestanaPrincipal:Button({
+    Title = "Cerrar Hub",
     Callback = function()
-        -- Tu código aquí
+        Window:Destroy()
     end
 })
