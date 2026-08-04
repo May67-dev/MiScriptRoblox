@@ -15,7 +15,7 @@ local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footag
 local Window = WindUI:CreateWindow({
     Title = "NC HUB",
     Author = "By hidjcjgg",
-    Folder = "May67Scripts",
+    Folder = "NCHUBScripts",
     Icon = "solar:bolt-bold",
     Theme = "Dark",
     Size = UDim2.fromOffset(600, 460),
@@ -50,11 +50,31 @@ CardPerfil:Image({
 CardPerfil:Section({ Title = "👤 Usuario: " .. LP.Name })
 CardPerfil:Section({ Title = "📅 Antigüedad: " .. LP.AccountAge .. " días" })
 
--- --- TARJETA: JUEGO ---
-local CardJuego = HomeTab:Section({ Title = "🌌 NÚCLEO", Box = true, BoxBorder = true })
-local infoJuego = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId)
-CardJuego:Section({ Title = "🎮 Juego: " .. (infoJuego.Name or "Desconocido") })
-CardJuego:Section({ Title = "📡 Servidor: " .. #game.Players:GetPlayers() .. " / " .. game.Players.MaxPlayers })
+-- --- TARJETA: NÚCLEO (CORREGIDA) ---
+local CardJuego = HomeTab:Section({ 
+    Title = "🌌 NÚCLEO DEL SISTEMA", 
+    Box = true, 
+    BoxBorder = true 
+})
+
+-- Sistema de seguridad para obtener el nombre del juego
+local success, info = pcall(function() 
+    return game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId) 
+end)
+local nombreReal = (success and info and info.Name) or "Desconocido"
+
+-- Mostramos la información (usando títulos directos para que no salga vacío)
+CardJuego:Section({ 
+    Title = "🎮 Juego: " .. tostring(nombreReal) 
+})
+
+CardJuego:Section({ 
+    Title = "📡 Servidor: " .. #game.Players:GetPlayers() .. " / " .. game.Players.MaxPlayers 
+})
+
+CardJuego:Section({ 
+    Title = "📍 ID: " .. game.PlaceId 
+})
 
 -- --- TARJETA: SESIÓN ---
 local CardSesion = HomeTab:Section({ Title = "⚡ SESIÓN", Box = true, BoxBorder = true })
