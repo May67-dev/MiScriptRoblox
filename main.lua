@@ -32,75 +32,80 @@ local SeccionSistema = Window:Section({
 })
 
 -- ==========================================
--- 3. PESTAÑA: INICIO (DISEÑO BENTO BOX FUTURISTA)
+-- 3. PESTAÑA: HOME (DISEÑO BENTO BOX FUTURISTA)
 -- ==========================================
 local HomeTab = SeccionHome:Tab({
     Title = "Dashboard",
     Icon = "solar:widget-bold"
 })
 
--- OBTENCIÓN DE DATOS (Se mantienen tus variables originales)
+-- OBTENCIÓN DE DATOS DINÁMICOS
 local MarketplaceService = game:GetService("MarketplaceService")
 local infoJuego = MarketplaceService:GetProductInfo(game.PlaceId)
 local nombreJuego = infoJuego.Name or "Juego Desconocido"
-local maxJugadores = game.Players.MaxPlayers
-local jugadoresActuales = #game.Players:GetPlayers()
 local userId = game.Players.LocalPlayer.UserId
+local fotoUrl = "rbxthumb://type=AvatarHeadShot&id=" .. userId .. "&w=420&h=420"
 
--- --- TARJETA 1: PERFIL DEL JUGADOR (Estilo Caja) ---
+-- --- TARJETA 1: IDENTIDAD DIGITAL (ESTILO MORADO) ---
 local CardPerfil = HomeTab:Section({
-    Title = "👤 PERFIL DEL USUARIO",
+    Title = "🔮 IDENTIDAD DIGITAL",
     Box = true,
     BoxBorder = true
 })
 
--- Imagen de Perfil
 CardPerfil:Image({
-    Image = "rbxthumb://type=AvatarHeadShot&id=" .. userId .. "&w=420&h=420",
+    Image = fotoUrl,
     AspectRatio = "1:1",
-    Radius = 100
-})
-
--- Usamos :Section para el texto (que es lo que no da error)
-CardPerfil:Section({
-    Title = "Usuario: " .. game.Players.LocalPlayer.Name
+    Radius = 100 -- Foto redonda tipo perfil premium
 })
 
 CardPerfil:Section({
-    Title = "ID: " .. userId
+    Title = "👤 Usuario: " .. game.Players.LocalPlayer.Name
 })
 
--- --- TARJETA 2: DATOS DEL JUEGO (Estilo Caja) ---
+CardPerfil:Section({
+    Title = "🆔 UserID: " .. userId
+})
+
+CardPerfil:Section({
+    Title = "📅 Antigüedad: " .. game.Players.LocalPlayer.AccountAge .. " días"
+})
+
+-- --- TARJETA 2: NÚCLEO DEL SISTEMA (ESTILO AZUL) ---
 local CardJuego = HomeTab:Section({
-    Title = "🎮 INFORMACIÓN DEL JUEGO",
+    Title = "🌌 NÚCLEO DEL JUEGO",
     Box = true,
     BoxBorder = true
 })
 
 CardJuego:Section({
-    Title = "Juego: " .. nombreJuego
+    Title = "🎮 Mapeado en: " .. nombreJuego
 })
 
 CardJuego:Section({
-    Title = "👥 Servidor: " .. jugadoresActuales .. " / " .. maxJugadores
+    Title = "📡 Servidor: " .. #game.Players:GetPlayers() .. " / " .. game.Players.MaxPlayers
 })
 
--- --- TARJETA 3: ESTADO DE SESIÓN (Estilo Caja) ---
+CardJuego:Section({
+    Title = "📍 Place ID: " .. game.PlaceId
+})
+
+-- --- TARJETA 3: MONITOR DE SESIÓN (FUTURISTA) ---
 local CardSesion = HomeTab:Section({
-    Title = "⚡ ESTADO DE SESIÓN",
+    Title = "⚡ MONITOR DE SESIÓN",
     Box = true,
     BoxBorder = true
 })
 
 local TimeLabel = CardSesion:Section({
-    Title = "⏳ Tiempo activo: 0h 0m 0s"
+    Title = "⏳ Tiempo Activo: 0h 0m 0s"
 })
 
 CardSesion:Section({
-    Title = "✨ Status: Operacional"
+    Title = "💎 Status: NC HUB Operacional"
 })
 
--- Bucle de actualización (Asegúrate de tener TiempoInicio al principio del script)
+-- Bucle de actualización (Usa la variable TiempoInicio de la línea 2)
 task.spawn(function()
     while true do
         local segundos = os.time() - TiempoInicio
@@ -109,7 +114,7 @@ task.spawn(function()
         local texto = string.format("%dh %dm %ds", horas, mins % 60, segundos % 60)
         
         pcall(function()
-            TimeLabel:SetTitle("⏳ Tiempo activo: " .. texto)
+            TimeLabel:SetTitle("⏳ Tiempo Activo: " .. texto)
         end)
         
         task.wait(1)
