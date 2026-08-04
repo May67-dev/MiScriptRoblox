@@ -33,59 +33,65 @@ local SeccionJuegos = Window:Section({ Title = "JUEGOS" })
 local SeccionSistema = Window:Section({ Title = "SISTEMA" })
 
 -- ==========================================
--- 3. PESTAÑA: HOME (DISEÑO BENTO BOX)
+-- 3. PESTAÑA: HOME (LIMPIA Y FUTURISTA)
 -- ==========================================
 local HomeTab = SeccionHome:Tab({
     Title = "Dashboard",
-    Icon = "solar:home-2-bold"
+    Icon = "solar:widget-bold"
 })
 
--- --- TARJETA: PERFIL ---
-local CardPerfil = HomeTab:Section({ Title = "🔮 IDENTIDAD", Box = true, BoxBorder = true })
+-- OBTENCIÓN DE DATOS
+local userId = game.Players.LocalPlayer.UserId
+local fotoUrl = "rbxthumb://type=AvatarHeadShot&id=" .. userId .. "&w=420&h=420"
+
+-- --- TARJETA 1: IDENTIDAD DIGITAL ---
+local CardPerfil = HomeTab:Section({
+    Title = "🔮 IDENTIDAD DIGITAL",
+    Box = true,
+    BoxBorder = true
+})
+
 CardPerfil:Image({
-    Image = "rbxthumb://type=AvatarHeadShot&id=" .. LP.UserId .. "&w=420&h=420",
+    Image = fotoUrl,
     AspectRatio = "1:1",
     Radius = 100
 })
-CardPerfil:Section({ Title = "👤 Usuario: " .. LP.Name })
-CardPerfil:Section({ Title = "📅 Antigüedad: " .. LP.AccountAge .. " días" })
 
--- --- TARJETA: NÚCLEO (CORREGIDA) ---
-local CardJuego = HomeTab:Section({ 
-    Title = "🌌 NÚCLEO DEL SISTEMA", 
-    Box = true, 
-    BoxBorder = true 
+CardPerfil:Section({
+    Title = "👤 Usuario: " .. game.Players.LocalPlayer.Name
 })
 
--- Sistema de seguridad para obtener el nombre del juego
-local success, info = pcall(function() 
-    return game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId) 
-end)
-local nombreReal = (success and info and info.Name) or "Desconocido"
-
--- Mostramos la información (usando títulos directos para que no salga vacío)
-CardJuego:Section({ 
-    Title = "🎮 Juego: " .. tostring(nombreReal) 
+CardPerfil:Section({
+    Title = "📅 Antigüedad: " .. game.Players.LocalPlayer.AccountAge .. " días"
 })
 
-CardJuego:Section({ 
-    Title = "📡 Servidor: " .. #game.Players:GetPlayers() .. " / " .. game.Players.MaxPlayers 
+-- --- TARJETA 2: MONITOR DE SESIÓN ---
+local CardSesion = HomeTab:Section({
+    Title = "⚡ MONITOR DE SESIÓN",
+    Box = true,
+    BoxBorder = true
 })
 
-CardJuego:Section({ 
-    Title = "📍 ID: " .. game.PlaceId 
+local TimeLabel = CardSesion:Section({
+    Title = "⏳ Tiempo Activo: 0h 0m 0s"
 })
 
--- --- TARJETA: SESIÓN ---
-local CardSesion = HomeTab:Section({ Title = "⚡ SESIÓN", Box = true, BoxBorder = true })
-local TimeLabel = CardSesion:Section({ Title = "⏳ Tiempo: 0h 0m 0s" })
+CardSesion:Section({
+    Title = "💎 Status: NC HUB Operacional"
+})
 
+-- Bucle de actualización
 task.spawn(function()
     while true do
-        local seg = os.time() - TiempoInicio
-        local mins = math.floor(seg / 60)
+        local segundos = os.time() - TiempoInicio
+        local mins = math.floor(segundos / 60)
         local horas = math.floor(mins / 60)
-        pcall(function() TimeLabel:SetTitle(string.format("⏳ Tiempo: %dh %dm %ds", horas, mins % 60, seg % 60)) end)
+        local texto = string.format("%dh %dm %ds", horas, mins % 60, segundos % 60)
+        
+        pcall(function()
+            TimeLabel:SetTitle("⏳ Tiempo Activo: " .. texto)
+        end)
+        
         task.wait(1)
     end
 end)
