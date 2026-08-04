@@ -1,17 +1,17 @@
 --[[
-    NC HUB - REPARADO Y MEJORADO
+    NC HUB - VERSIÓN FINAL ORGANIZADA
     AUTOR: hidjcjgg
-    DISEÑO: BENTO BOX FUTURISTA (MORADO/AZUL)
+    ESTILO: BENTO BOX FUTURISTA (MORADO/AZUL)
 ]]
 
 -- ==========================================
--- 0. VARIABLES Y CRONÓMETRO
+-- 0. CONFIGURACIÓN INICIAL
 -- ==========================================
 local TiempoInicio = os.time()
 local LP = game.Players.LocalPlayer
 local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
 
--- 1. CONFIGURACIÓN DE LA VENTANA
+-- 1. CREACIÓN DE LA VENTANA
 local Window = WindUI:CreateWindow({
     Title = "NC HUB",
     Author = "By hidjcjgg",
@@ -33,35 +33,31 @@ local SeccionJuegos = Window:Section({ Title = "JUEGOS" })
 local SeccionSistema = Window:Section({ Title = "SISTEMA" })
 
 -- ==========================================
--- 3. PESTAÑA: INICIO (BENTO BOX FUTURISTA)
+-- 3. PESTAÑA: HOME (DISEÑO BENTO BOX)
 -- ==========================================
 local HomeTab = SeccionHome:Tab({
     Title = "Dashboard",
     Icon = "solar:home-2-bold"
 })
 
--- --- TARJETA 1: IDENTIDAD DIGITAL ---
-local CardPerfil = HomeTab:Section({ Title = "🔮 IDENTIDAD DIGITAL", Box = true, BoxBorder = true })
-local userId = LP.UserId
-
+-- --- TARJETA: PERFIL ---
+local CardPerfil = HomeTab:Section({ Title = "🔮 IDENTIDAD", Box = true, BoxBorder = true })
 CardPerfil:Image({
-    Image = "rbxthumb://type=AvatarHeadShot&id=" .. userId .. "&w=420&h=420",
+    Image = "rbxthumb://type=AvatarHeadShot&id=" .. LP.UserId .. "&w=420&h=420",
     AspectRatio = "1:1",
     Radius = 100
 })
-
 CardPerfil:Section({ Title = "👤 Usuario: " .. LP.Name })
 CardPerfil:Section({ Title = "📅 Antigüedad: " .. LP.AccountAge .. " días" })
 
--- --- TARJETA 2: NÚCLEO DEL JUEGO ---
-local CardJuego = HomeTab:Section({ Title = "🌌 NÚCLEO DEL JUEGO", Box = true, BoxBorder = true })
+-- --- TARJETA: JUEGO ---
+local CardJuego = HomeTab:Section({ Title = "🌌 NÚCLEO", Box = true, BoxBorder = true })
 local infoJuego = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId)
-
 CardJuego:Section({ Title = "🎮 Juego: " .. (infoJuego.Name or "Desconocido") })
 CardJuego:Section({ Title = "📡 Servidor: " .. #game.Players:GetPlayers() .. " / " .. game.Players.MaxPlayers })
 
--- --- TARJETA 3: MONITOR DE SESIÓN ---
-local CardSesion = HomeTab:Section({ Title = "⚡ MONITOR DE SESIÓN", Box = true, BoxBorder = true })
+-- --- TARJETA: SESIÓN ---
+local CardSesion = HomeTab:Section({ Title = "⚡ SESIÓN", Box = true, BoxBorder = true })
 local TimeLabel = CardSesion:Section({ Title = "⏳ Tiempo: 0h 0m 0s" })
 
 task.spawn(function()
@@ -81,7 +77,7 @@ local MovTab = SeccionTrampas:Tab({ Title = "Movimiento", Icon = "solar:walking-
 local HackTab = SeccionTrampas:Tab({ Title = "Hacks", Icon = "solar:ghost-bold" })
 local FlyTab = SeccionTrampas:Tab({ Title = "Vuelo", Icon = "solar:plain-bold" })
 
--- --- MOVIMIENTO ---
+-- MOVIMIENTO
 MovTab:Slider({
     Title = "Velocidad",
     Step = 1,
@@ -95,7 +91,7 @@ game:GetService("UserInputService").JumpRequest:Connect(function()
     if InfJump and LP.Character then LP.Character.Humanoid:ChangeState("Jumping") end
 end)
 
--- --- HACKS ---
+-- HACKS
 local Noclip = false
 HackTab:Toggle({ Title = "Noclip (Paredes)", Callback = function(s) Noclip = s end })
 game:GetService("RunService").Stepped:Connect(function()
@@ -107,13 +103,13 @@ game:GetService("RunService").Stepped:Connect(function()
 end)
 
 HackTab:Toggle({
-    Title = "Ver Jugadores (ESP)",
+    Title = "ESP (Ver Jugadores)",
     Callback = function(s)
         for _, p in pairs(game.Players:GetPlayers()) do
             if p ~= LP and p.Character then
                 if s then
                     local h = p.Character:FindFirstChild("Highlight") or Instance.new("Highlight", p.Character)
-                    h.FillColor = Color3.fromRGB(150, 0, 255) -- Morado futurista
+                    h.FillColor = Color3.fromRGB(150, 0, 255)
                 else
                     if p.Character:FindFirstChild("Highlight") then p.Character.Highlight:Destroy() end
                 end
@@ -122,7 +118,7 @@ HackTab:Toggle({
     end
 })
 
--- --- VUELO PRO ---
+-- VUELO PRO
 local Vuelo = false
 local VelVuelo = 80
 FlyTab:Slider({ Title = "Velocidad Vuelo", Value = { Min = 10, Max = 400, Default = 80 }, Callback = function(v) VelVuelo = v end })
@@ -160,59 +156,45 @@ FlyTab:Toggle({
 })
 
 -- ==========================================
--- 5. PESTAÑA: JUEGOS (HACK A BUSINESS FIX)
+-- 5. PESTAÑA: JUEGOS (VACÍA)
 -- ==========================================
-local HABTab = SeccionJuegos:Tab({ Title = "Hack A Business", Icon = "solar:computer-bold" })
-local AutoHAB = HABTab:Section({ Title = "AUTO FARM", Box = true, BoxBorder = true })
+local JuegosTab = SeccionJuegos:Tab({
+    Title = "Lista de Juegos",
+    Icon = "solar:gamepad-bold"
+})
 
-local AutoCollect = false
-local AutoSell = false
+JuegosTab:Section({ Title = "Próximamente..." })
 
-AutoHAB:Toggle({ Title = "Auto Recoger Servers", Callback = function(s) AutoCollect = s end })
-AutoHAB:Toggle({ Title = "Auto Vender (Best)", Callback = function(s) AutoSell = s end })
+-- ==========================================
+-- 6. PESTAÑA: AJUSTES (SISTEMA)
+-- ==========================================
+local AjustesTab = SeccionSistema:Tab({
+    Title = "Ajustes",
+    Icon = "solar:settings-bold"
+})
 
-task.spawn(function()
-    local RS = game:GetService("ReplicatedStorage")
-    while true do
-        if AutoCollect then
-            for _, obj in ipairs(workspace:GetDescendants()) do
-                if obj:IsA("BasePart") and (obj.Name:lower():find("server") or obj.Name:lower():find("data")) then
-                    pcall(function() RS.PickUpObject:FireServer(obj) end)
-                end
-            end
-        end
-        if AutoSell then pcall(function() RS.SellObject:FireServer() end) end
-        task.wait(0.5)
+AjustesTab:Button({
+    Title = "Activar Anti-AFK",
+    Callback = function()
+        game.Players.LocalPlayer.Idled:Connect(function()
+            game:GetService("VirtualUser"):ClickButton2(Vector2.new())
+        end)
+        WindUI:Notify({ Title = "Sistema", Content = "Anti-AFK Activado" })
     end
-end)
+})
 
--- ==========================================
--- 6. PESTAÑA: SISTEMA (HERRAMIENTAS PRO)
--- ==========================================
-local ToolTab = SeccionSistema:Tab({ Title = "Herramientas", Icon = "solar:settings-bold" })
-
-ToolTab:Button({
+-- Botón para el Dex que pediste antes (Lo puse aquí para que no estorbe)
+AjustesTab:Button({
     Title = "Cargar Dark Dex V3",
-    Desc = "El explorador real de Infinite Yield",
     Callback = function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()
-        WindUI:Notify({ Title = "Sistema", Content = "Dex Cargado" })
     end
 })
 
-ToolTab:Button({
-    Title = "Cargar SimpleSpy V3",
-    Desc = "Mira los remotes del juego",
-    Callback = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/ex70/SimpleSpyV3/main/main.lua"))()
-        WindUI:Notify({ Title = "Sistema", Content = "SimpleSpy Cargado" })
-    end
-})
-
-ToolTab:Button({
+AjustesTab:Button({
     Title = "Cerrar Hub",
     Callback = function() Window:Destroy() end
 })
 
--- NOTIFICACIÓN DE CARGA
-WindUI:Notify({ Title = "NC HUB", Content = "Bienvenido, " .. LP.Name .. ". Todo listo.", Duration = 5 })
+-- NOTIFICACIÓN FINAL
+WindUI:Notify({ Title = "NC HUB", Content = "Script cargado correctamente.", Duration = 5 })
