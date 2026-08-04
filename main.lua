@@ -441,6 +441,119 @@ DebugSection:Button({
     end
 })
 -- ==========================================
+
+-- ==========================================
+-- EXPLORADOR DE JUEGO (Tipo Infinite Yield)
+-- ==========================================
+local ExplorerTab = SeccionSistema:Tab({
+    Title = "Explorador",
+    Icon = "solar:folder-bold"
+})
+
+local ExplorerSection = ExplorerTab:Section({
+    Title = "Explorador de Objetos",
+    Box = true,
+    BoxBorder = true
+})
+
+local SelectedParent = game
+
+local function RefreshExplorer()
+    ExplorerSection:Clear()
+    
+    local function AddChildren(parent, depth)
+        if depth > 10 then return end
+        
+        for _, child in ipairs(parent:GetChildren()) do
+            local buttonName = child.Name .. " [" .. child.ClassName .. "]"
+            
+            ExplorerSection:Button({
+                Title = string.rep("  ", depth) .. "📄 " .. buttonName,
+                Callback = function()
+                    SelectedParent = child
+                    WindUI:Notify({
+                        Title = "Seleccionado",
+                        Content = child.Name .. "\
+Clase: " .. child.ClassName .. "\
+Padre: " .. parent.Name
+                    })
+                end
+            })
+            
+            if #child:GetChildren() > 0 then
+                AddChildren(child, depth + 1)
+            end
+        end
+    end
+    
+    AddChildren(SelectedParent, 0)
+end
+
+ExplorerSection:Button({
+    Title = "📁 game",
+    Callback = function()
+        SelectedParent = game
+        RefreshExplorer()
+    end
+})
+
+ExplorerSection:Button({
+    Title = "📁 Workspace",
+    Callback = function()
+        SelectedParent = game.Workspace
+        RefreshExplorer()
+    end
+})
+
+ExplorerSection:Button({
+    Title = "📁 ReplicatedStorage",
+    Callback = function()
+        SelectedParent = game.ReplicatedStorage
+        RefreshExplorer()
+    end
+})
+
+ExplorerSection:Button({
+    Title = "📁 Players",
+    Callback = function()
+        SelectedParent = game.Players
+        RefreshExplorer()
+    end
+})
+
+ExplorerSection:Button({
+    Title = "🔄 Refresh",
+    Callback = function()
+        RefreshExplorer()
+    end
+})
+
+ExplorerSection:Button({
+    Title = "📋 Copiar Lista Completa",
+    Callback = function()
+        local function GetAllChildren(parent, depth)
+            local result = ""
+            if depth > 10 then return result end
+            
+            for _, child in ipairs(parent:GetChildren()) do
+                result = result .. string.rep("  ", depth) .. child.Name .. " [" .. child.ClassName .. "]"
+                result = result .. GetAllChildren(child, depth + 1)
+            end
+            return result
+        end
+        
+        local fullList = GetAllChildren(SelectedParent, 0)
+        setclipboard(fullList)
+        WindUI:Notify({
+            Title = "Explorador",
+            Content = "Lista copiada!"
+        })
+    end
+})
+
+task.wait(1)
+RefreshExplorer()
+
 -- SECCIÓN: JUEGOS
 -- ==========================================
 local SeccionJuegos = Window:Section({
