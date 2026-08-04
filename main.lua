@@ -182,14 +182,89 @@ FlyTab:Toggle({
 })
 
 -- ==========================================
--- 5. PESTAÑA: JUEGOS (VACÍA)
+-- 5. SECCIÓN: JUEGOS (ESTRUCTURA BASE)
 -- ==========================================
-local JuegosTab = SeccionJuegos:Tab({
-    Title = "Lista de Juegos",
-    Icon = "solar:gamepad-bold"
+
+-- --- PESTAÑA: MURDER MYSTERY 2 ---
+local MM2Tab = SeccionJuegos:Tab({
+    Title = "Murder Mystery 2",
+    Icon = "solar:danger-bold"
 })
 
-JuegosTab:Section({ Title = "Próximamente..." })
+-- Grupo de Visuales (ESP)
+local MM2Visuals = MM2Tab:Group({ 
+    Title = "Visuales y ESP" 
+})
+
+MM2Visuals:Toggle({
+    Title = "Revelar Roles",
+    Desc = "Asesino (Rojo) | Sheriff (Azul)",
+    Callback = function(state)
+        -- Lógica de ESP pendiente
+        print("ESP Roles cambiado a:", state)
+    end
+})
+
+MM2Visuals:Toggle({
+    Title = "ESP Pistola Tirada",
+    Desc = "Muestra dónde cayó la pistola",
+    Callback = function(state)
+        -- Lógica de ESP Gun pendiente
+        print("ESP Gun cambiado a:", state)
+    end
+})
+
+-- Grupo de Combate
+local MM2Combat = MM2Tab:Group({ 
+    Title = "Ventajas de Combate" 
+})
+
+MM2Combat:Toggle({
+    Title = "Auto-Grab Gun",
+    Desc = "Teletransporta a la pistola si cae",
+    Callback = function(state)
+        -- Lógica de Auto-Grab pendiente
+        print("Auto-Grab cambiado a:", state)
+    end
+})
+
+-- --- PESTAÑA: HACK A BUSINESS ---
+local HABTab = SeccionJuegos:Tab({
+    Title = "Hack A Business",
+    Icon = "solar:computer-bold"
+})
+
+-- Grupo de Auto Farm
+local HABFarm = HABTab:Group({ 
+    Title = "Automatización (Farm)" 
+})
+
+HABFarm:Toggle({
+    Title = "Auto Recoger",
+    Desc = "Recoge Servers y Datos solo",
+    Callback = function(state)
+        -- Bucle de recolección pendiente
+        print("Auto Collect cambiado a:", state)
+    end
+})
+
+HABFarm:Toggle({
+    Title = "Auto Vender",
+    Desc = "Vende en la mejor zona",
+    Callback = function(state)
+        -- Remote de venta pendiente
+        print("Auto Sell cambiado a:", state)
+    end
+})
+
+HABFarm:Toggle({
+    Title = "Auto Robar (Steal)",
+    Desc = "Roba a otros jugadores",
+    Callback = function(state)
+        -- Lógica de robo pendiente
+        print("Auto Steal cambiado a:", state)
+    end
+})
 
 -- ==========================================
 -- 6. PESTAÑA: AJUSTES (SISTEMA)
