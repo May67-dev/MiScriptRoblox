@@ -185,7 +185,9 @@ FlyTab:Toggle({
 -- 5. SECCIÓN: JUEGOS (ESTRUCTURA BASE)
 -- ==========================================
 
--- --- PESTAÑA: MURDER MYSTERY 2 (FIXED) ---
+-- ==========================================
+-- 5. PESTAÑA: MURDER MYSTERY 2 (LIMPIA)
+-- ==========================================
 local MM2Tab = SeccionJuegos:Tab({
     Title = "Murder Mystery 2",
     Icon = "solar:danger-bold"
@@ -194,8 +196,10 @@ local MM2Tab = SeccionJuegos:Tab({
 local RolesESP = false
 local AutoGrab = false
 
--- GRUPO: VISUALES
-local MM2Visuals = MM2Tab:Group({ Title = "Visuales y ESP" })
+-- --- GRUPO 1: VISUALES ---
+local MM2Visuals = MM2Tab:Group({ 
+    Title = "Visuales y ESP" 
+})
 
 MM2Visuals:Toggle({
     Title = "Revelar Roles",
@@ -207,8 +211,6 @@ MM2Visuals:Toggle({
                 for _, p in pairs(game.Players:GetPlayers()) do
                     if p ~= game.Players.LocalPlayer and p.Character then
                         local color = Color3.fromRGB(0, 255, 0) -- Inocente
-                        
-                        -- DETECCIÓN REAL: Miramos mochila y manos
                         local hasKnife = p.Backpack:FindFirstChild("Knife") or p.Character:FindFirstChild("Knife")
                         local hasGun = p.Backpack:FindFirstChild("Gun") or p.Character:FindFirstChild("Gun")
                         
@@ -220,13 +222,11 @@ MM2Visuals:Toggle({
                         
                         local h = p.Character:FindFirstChild("Highlight") or Instance.new("Highlight", p.Character)
                         h.FillColor = color
-                        h.OutlineColor = Color3.fromRGB(255, 255, 255)
                         h.Enabled = true
                     end
                 end
                 task.wait(1)
             end
-            -- Limpiar
             for _, p in pairs(game.Players:GetPlayers()) do
                 if p.Character and p.Character:FindFirstChild("Highlight") then
                     p.Character.Highlight:Destroy()
@@ -236,56 +236,33 @@ MM2Visuals:Toggle({
     end
 })
 
--- GRUPO: COMBATE
-local MM2Combat = MM2Tab:Group({ Title = "Ventajas de Combate" })
+-- --- GRUPO 2: COMBATE (AHORA SOLO UNO) ---
+local MM2Combat = MM2Tab:Group({ 
+    Title = "Ventajas de Combate" 
+})
 
 MM2Combat:Toggle({
     Title = "Auto-Grab Gun",
-    Desc = "Busca la pistola en todo el mapa",
+    Desc = "Recoge la pistola solo si está en el suelo",
     Callback = function(state)
         AutoGrab = state
         task.spawn(function()
             while AutoGrab do
-                -- Buscamos cualquier cosa que se llame Gun o GunDrop en el Workspace
                 for _, v in pairs(workspace:GetDescendants()) do
                     if (v.Name == "GunDrop" or v.Name == "Gun") and v:IsA("Model") then
-                        local root = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                        if root then
-                            -- Nos teletransportamos a la parte principal de la pistola
+                        -- Verificamos que no sea de un jugador vivo
+                        if not v:FindFirstAncestorOfClass("Model") or not v:FindFirstAncestorOfClass("Model"):FindFirstChild("Humanoid") then
+                            local root = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
                             local target = v:FindFirstChild("Handle") or v:FindFirstChildWhichIsA("BasePart")
-                            if target then
+                            if root and target then
                                 root.CFrame = target.CFrame
-                                WindUI:Notify({Title = "MM2", Content = "¡Pistola recogida!"})
-                                task.wait(1) -- Esperamos para no bugearnos
+                                WindUI:Notify({Title = "MM2", Content = "Pistola recogida"})
+                                task.wait(1)
                             end
                         end
                     end
                 end
-                task.wait(0.5)
-            end
-        end)
-    end
-})
-
--- GRUPO: COMBATE
-local MM2Combat = MM2Tab:Group({ Title = "Ventajas de Combate" })
-
-MM2Combat:Toggle({
-    Title = "Auto-Grab Gun",
-    Desc = "Recoge la pistola automáticamente",
-    Callback = function(state)
-        AutoGrab = state
-        task.spawn(function()
-            while AutoGrab do
-                -- Buscamos la pistola en el Workspace (Nombre común: GunDrop)
-                local gun = workspace:FindFirstChild("GunDrop") or workspace:FindFirstChild("Gun")
-                if gun and gun:FindFirstChild("Handle") then
-                    local root = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                    if root then
-                        root.CFrame = gun.Handle.CFrame
-                    end
-                end
-                task.wait(0.5)
+                task.wait(0.3)
             end
         end)
     end
