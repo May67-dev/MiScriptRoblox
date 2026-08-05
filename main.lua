@@ -386,35 +386,49 @@ HABFarm:Toggle({
 })
 
 -- ==========================================
--- 6. PESTAÑA: AJUSTES (SISTEMA)
+-- 6. PESTAÑA: AJUSTES (SISTEMA ACTUALIZADO)
 -- ==========================================
 local AjustesTab = SeccionSistema:Tab({
     Title = "Ajustes",
     Icon = "solar:settings-bold"
 })
 
-AjustesTab:Button({
+-- Herramientas de Desarrollador (Para encontrar Hacks)
+local DevTools = AjustesTab:Group({ Title = "Herramientas Pro" })
+
+DevTools:Button({
+    Title = "Cargar Dark Dex V3",
+    Desc = "Explorador de objetos y archivos",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()
+        WindUI:Notify({Title = "Sistema", Content = "Dex Cargado"})
+    end
+})
+
+DevTools:Button({
+    Title = "Cargar SimpleSpy V3",
+    Desc = "Detecta los Remotes del juego al instante",
+    Callback = function()
+        -- Este es el link oficial y más estable para móvil
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/ex70/SimpleSpyV3/main/main.lua"))()
+        WindUI:Notify({Title = "Sistema", Content = "SimpleSpy Cargado"})
+    end
+})
+
+-- Utilidades de Sesión
+local Utils = AjustesTab:Group({ Title = "Utilidades" })
+
+Utils:Button({
     Title = "Activar Anti-AFK",
     Callback = function()
         game.Players.LocalPlayer.Idled:Connect(function()
             game:GetService("VirtualUser"):ClickButton2(Vector2.new())
         end)
-        WindUI:Notify({ Title = "Sistema", Content = "Anti-AFK Activado" })
+        WindUI:Notify({Title = "Sistema", Content = "Anti-AFK Activado"})
     end
 })
 
--- Botón para el Dex que pediste antes (Lo puse aquí para que no estorbe)
-AjustesTab:Button({
-    Title = "Cargar Dark Dex V3",
-    Callback = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()
-    end
-})
-
-AjustesTab:Button({
+Utils:Button({
     Title = "Cerrar Hub",
     Callback = function() Window:Destroy() end
 })
-
--- NOTIFICACIÓN FINAL
-WindUI:Notify({ Title = "NC HUB", Content = "Script cargado correctamente.", Duration = 5 })
