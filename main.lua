@@ -185,64 +185,83 @@ FlyTab:Toggle({
 -- 5. SECCIÓN: JUEGOS (ESTRUCTURA BASE)
 -- ==========================================
 
--- --- PESTAÑA: MURDER MYSTERY 2 (FUNCIONAL) ---
+-- --- PESTAÑA: MURDER MYSTERY 2 (FIXED) ---
 local MM2Tab = SeccionJuegos:Tab({
     Title = "Murder Mystery 2",
     Icon = "solar:danger-bold"
 })
 
--- VARIABLES DE CONTROL
 local RolesESP = false
-local GunESP = false
 local AutoGrab = false
-
--- FUNCIÓN PARA OBTENER ROLES (Usando el Remote que encontraste)
-local function GetRoles()
-    local Roles = {}
-    local Remote = game:GetService("ReplicatedStorage"):FindFirstChild("GetPlayerData", true)
-    if Remote then
-        local Data = Remote:InvokeServer()
-        for i, v in pairs(Data) do
-            Roles[i] = v.Role
-        end
-    end
-    return Roles
-end
 
 -- GRUPO: VISUALES
 local MM2Visuals = MM2Tab:Group({ Title = "Visuales y ESP" })
 
 MM2Visuals:Toggle({
     Title = "Revelar Roles",
-    Desc = "Asesino (Rojo) | Sheriff (Azul)",
+    Desc = "Detección por Inventario (Asesino/Sheriff)",
     Callback = function(state)
         RolesESP = state
         task.spawn(function()
             while RolesESP do
-                local CurrentRoles = GetRoles()
                 for _, p in pairs(game.Players:GetPlayers()) do
                     if p ~= game.Players.LocalPlayer and p.Character then
-                        local role = CurrentRoles[p.Name]
-                        local color = Color3.fromRGB(0, 255, 0) -- Inocente (Verde)
+                        local color = Color3.fromRGB(0, 255, 0) -- Inocente
                         
-                        if role == "Murderer" then
-                            color = Color3.fromRGB(255, 0, 0) -- Asesino (Rojo)
-                        elseif role == "Sheriff" then
-                            color = Color3.fromRGB(0, 0, 255) -- Sheriff (Azul)
+                        -- DETECCIÓN REAL: Miramos mochila y manos
+                        local hasKnife = p.Backpack:FindFirstChild("Knife") or p.Character:FindFirstChild("Knife")
+                        local hasGun = p.Backpack:FindFirstChild("Gun") or p.Character:FindFirstChild("Gun")
+                        
+                        if hasKnife then
+                            color = Color3.fromRGB(255, 0, 0) -- Rojo
+                        elseif hasGun then
+                            color = Color3.fromRGB(0, 0, 255) -- Azul
                         end
                         
                         local h = p.Character:FindFirstChild("Highlight") or Instance.new("Highlight", p.Character)
                         h.FillColor = color
+                        h.OutlineColor = Color3.fromRGB(255, 255, 255)
                         h.Enabled = true
                     end
                 end
-                task.wait(2)
+                task.wait(1)
             end
-            -- Limpiar al apagar
+            -- Limpiar
             for _, p in pairs(game.Players:GetPlayers()) do
                 if p.Character and p.Character:FindFirstChild("Highlight") then
                     p.Character.Highlight:Destroy()
                 end
+            end
+        end)
+    end
+})
+
+-- GRUPO: COMBATE
+local MM2Combat = MM2Tab:Group({ Title = "Ventajas de Combate" })
+
+MM2Combat:Toggle({
+    Title = "Auto-Grab Gun",
+    Desc = "Busca la pistola en todo el mapa",
+    Callback = function(state)
+        AutoGrab = state
+        task.spawn(function()
+            while AutoGrab do
+                -- Buscamos cualquier cosa que se llame Gun o GunDrop en el Workspace
+                for _, v in pairs(workspace:GetDescendants()) do
+                    if (v.Name == "GunDrop" or v.Name == "Gun") and v:IsA("Model") then
+                        local root = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                        if root then
+                            -- Nos teletransportamos a la parte principal de la pistola
+                            local target = v:FindFirstChild("Handle") or v:FindFirstChildWhichIsA("BasePart")
+                            if target then
+                                root.CFrame = target.CFrame
+                                WindUI:Notify({Title = "MM2", Content = "¡Pistola recogida!"})
+                                task.wait(1) -- Esperamos para no bugearnos
+                            end
+                        end
+                    end
+                end
+                task.wait(0.5)
             end
         end)
     end
