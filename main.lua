@@ -268,6 +268,68 @@ MM2Combat:Toggle({
     end
 })
 
+-- ==========================================
+-- 6. PESTAÑA: 2 PLAYER EVOLUTION TYCOON
+-- ==========================================
+local TycoonTab = SeccionJuegos:Tab({
+    Title = "Evolution Tycoon",
+    Icon = "solar:dollar-minimalistic-bold"
+})
+
+-- GRUPO: DINERO Y PUNTOS
+local TycoonFarm = TycoonTab:Group({ 
+    Title = "Generador de Recursos" 
+})
+
+-- Botón para Puntos Infinitos
+local AutoPoints = false
+TycoonFarm:Toggle({
+    Title = "Auto-Puntos (GivePoints)",
+    Desc = "Genera puntos sin parar",
+    Callback = function(state)
+        AutoPoints = state
+        task.spawn(function()
+            local remote = game:GetService("ReplicatedStorage"):FindFirstChild("GivePoints")
+            while AutoPoints do
+                if remote then
+                    -- Enviamos la señal para recibir puntos
+                    remote:FireServer() 
+                end
+                task.wait(0.1) -- 10 veces por segundo
+            end
+        end)
+    end
+})
+
+-- Botón para Desbloquear Todo
+TycoonFarm:Button({
+    Title = "Desbloquear Todos los Botones",
+    Desc = "Usa el remote UnlockAllButtons",
+    Callback = function()
+        local remote = game:GetService("ReplicatedStorage"):FindFirstChild("UnlockAllBottoms") -- Usamos el nombre exacto que viste
+        if remote then
+            remote:FireServer()
+            WindUI:Notify({Title = "Tycoon", Content = "Intentando desbloquear todo..."})
+        end
+    end
+})
+
+-- GRUPO: PRESTIGIO
+local TycoonRank = TycoonTab:Group({ 
+    Title = "Rango y Renacimiento" 
+})
+
+TycoonRank:Button({
+    Title = "Renacer Automático (Rebirth)",
+    Callback = function()
+        local remote = game:GetService("ReplicatedStorage"):FindFirstChild("RebirthPlayer")
+        if remote then
+            remote:FireServer()
+        end
+    end
+})
+
+
 -- --- PESTAÑA: HACK A BUSINESS ---
 local HABTab = SeccionJuegos:Tab({
     Title = "Hack A Business",
