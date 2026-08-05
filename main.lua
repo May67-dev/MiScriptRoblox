@@ -185,46 +185,90 @@ FlyTab:Toggle({
 -- 5. SECCIÓN: JUEGOS (ESTRUCTURA BASE)
 -- ==========================================
 
--- --- PESTAÑA: MURDER MYSTERY 2 ---
+-- --- PESTAÑA: MURDER MYSTERY 2 (FUNCIONAL) ---
 local MM2Tab = SeccionJuegos:Tab({
     Title = "Murder Mystery 2",
     Icon = "solar:danger-bold"
 })
 
--- Grupo de Visuales (ESP)
-local MM2Visuals = MM2Tab:Group({ 
-    Title = "Visuales y ESP" 
-})
+-- VARIABLES DE CONTROL
+local RolesESP = false
+local GunESP = false
+local AutoGrab = false
+
+-- FUNCIÓN PARA OBTENER ROLES (Usando el Remote que encontraste)
+local function GetRoles()
+    local Roles = {}
+    local Remote = game:GetService("ReplicatedStorage"):FindFirstChild("GetPlayerData", true)
+    if Remote then
+        local Data = Remote:InvokeServer()
+        for i, v in pairs(Data) do
+            Roles[i] = v.Role
+        end
+    end
+    return Roles
+end
+
+-- GRUPO: VISUALES
+local MM2Visuals = MM2Tab:Group({ Title = "Visuales y ESP" })
 
 MM2Visuals:Toggle({
     Title = "Revelar Roles",
     Desc = "Asesino (Rojo) | Sheriff (Azul)",
     Callback = function(state)
-        -- Lógica de ESP pendiente
-        print("ESP Roles cambiado a:", state)
+        RolesESP = state
+        task.spawn(function()
+            while RolesESP do
+                local CurrentRoles = GetRoles()
+                for _, p in pairs(game.Players:GetPlayers()) do
+                    if p ~= game.Players.LocalPlayer and p.Character then
+                        local role = CurrentRoles[p.Name]
+                        local color = Color3.fromRGB(0, 255, 0) -- Inocente (Verde)
+                        
+                        if role == "Murderer" then
+                            color = Color3.fromRGB(255, 0, 0) -- Asesino (Rojo)
+                        elseif role == "Sheriff" then
+                            color = Color3.fromRGB(0, 0, 255) -- Sheriff (Azul)
+                        end
+                        
+                        local h = p.Character:FindFirstChild("Highlight") or Instance.new("Highlight", p.Character)
+                        h.FillColor = color
+                        h.Enabled = true
+                    end
+                end
+                task.wait(2)
+            end
+            -- Limpiar al apagar
+            for _, p in pairs(game.Players:GetPlayers()) do
+                if p.Character and p.Character:FindFirstChild("Highlight") then
+                    p.Character.Highlight:Destroy()
+                end
+            end
+        end)
     end
 })
 
-MM2Visuals:Toggle({
-    Title = "ESP Pistola Tirada",
-    Desc = "Muestra dónde cayó la pistola",
-    Callback = function(state)
-        -- Lógica de ESP Gun pendiente
-        print("ESP Gun cambiado a:", state)
-    end
-})
-
--- Grupo de Combate
-local MM2Combat = MM2Tab:Group({ 
-    Title = "Ventajas de Combate" 
-})
+-- GRUPO: COMBATE
+local MM2Combat = MM2Tab:Group({ Title = "Ventajas de Combate" })
 
 MM2Combat:Toggle({
     Title = "Auto-Grab Gun",
-    Desc = "Teletransporta a la pistola si cae",
+    Desc = "Recoge la pistola automáticamente",
     Callback = function(state)
-        -- Lógica de Auto-Grab pendiente
-        print("Auto-Grab cambiado a:", state)
+        AutoGrab = state
+        task.spawn(function()
+            while AutoGrab do
+                -- Buscamos la pistola en el Workspace (Nombre común: GunDrop)
+                local gun = workspace:FindFirstChild("GunDrop") or workspace:FindFirstChild("Gun")
+                if gun and gun:FindFirstChild("Handle") then
+                    local root = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    if root then
+                        root.CFrame = gun.Handle.CFrame
+                    end
+                end
+                task.wait(0.5)
+            end
+        end)
     end
 })
 
