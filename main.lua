@@ -269,66 +269,83 @@ MM2Combat:Toggle({
 })
 
 -- ==========================================
--- 6. PESTAÑA: 2 PLAYER EVOLUTION TYCOON
+-- 6. PESTAÑA: MAGNATE DE FÁBRICAS
 -- ==========================================
-local TycoonTab = SeccionJuegos:Tab({
-    Title = "Evolution Tycoon",
-    Icon = "solar:dollar-minimalistic-bold"
+local FactoryTab = SeccionJuegos:Tab({
+    Title = "Factory Tycoon",
+    Icon = "solar:factory-bold"
 })
 
--- GRUPO: DINERO Y PUNTOS
-local TycoonFarm = TycoonTab:Group({ 
-    Title = "Generador de Recursos" 
+-- --- GRUPO 1: ESTADO DE LA FÁBRICA (DISEÑO BENTO) ---
+local FactoryStats = FactoryTab:Group({ 
+    Title = "Monitor de Recursos" 
 })
 
--- Botón para Puntos Infinitos
-local AutoPoints = false
-TycoonFarm:Toggle({
-    Title = "Auto-Puntos (GivePoints)",
-    Desc = "Genera puntos sin parar",
+local MoneyLabel = FactoryStats:Section({ Title = "💵 Efectivo: $0" })
+local ToCollectLabel = FactoryStats:Section({ Title = "📥 Por Recoger: $0" })
+local GemsLabel = FactoryStats:Section({ Title = "💎 Gemas: 0" })
+
+-- Bucle para actualizar tus datos en el Hub
+task.spawn(function()
+    while true do
+        pcall(function()
+            local data = game.Players.LocalPlayer:WaitForChild("DataFolder")
+            MoneyLabel:SetTitle("💵 Efectivo: $" .. data.Money.Value)
+            ToCollectLabel:SetTitle("📥 Por Recoger: $" .. data.ToCollect.Value)
+            GemsLabel:SetTitle("💎 Gemas: " .. data.Gems.Value)
+        end)
+        task.wait(1)
+    end
+end)
+
+-- --- GRUPO 2: AUTOMATIZACIÓN SEGURA ---
+local FactoryFarm = FactoryTab:Group({ 
+    Title = "Automatización" 
+})
+
+local AutoCollectFactory = false
+local FactoryDelay = 1.0 -- Retraso inicial seguro
+
+FactoryFarm:Slider({
+    Title = "Retraso de Seguridad",
+    Desc = "Segundos entre cada cobro (1.0 es seguro)",
+    Value = {Min = 0.1, Max = 10, Default = 1},
+    Callback = function(v) FactoryDelay = v end
+})
+
+FactoryFarm:Toggle({
+    Title = "Auto-Cobrar Dinero",
+    Desc = "Recoge el dinero acumulado automáticamente",
     Callback = function(state)
-        AutoPoints = state
+        AutoCollectFactory = state
         task.spawn(function()
-            local remote = game:GetService("ReplicatedStorage"):FindFirstChild("GivePoints")
-            while AutoPoints do
+            local remote = game:GetService("ReplicatedStorage").Events:FindFirstChild("CollectMoney")
+            while AutoCollectFactory do
                 if remote then
-                    -- Enviamos la señal para recibir puntos
-                    remote:FireServer() 
+                    remote:FireServer() -- Enviamos la señal de cobro
                 end
-                task.wait(0.1) -- 10 veces por segundo
+                task.wait(FactoryDelay) -- Usamos el tiempo del Slider
             end
         end)
     end
 })
 
--- Botón para Desbloquear Todo
-TycoonFarm:Button({
-    Title = "Desbloquear Todos los Botones",
-    Desc = "Usa el remote UnlockAllButtons",
+-- --- GRUPO 3: PRESTIGIO ---
+local FactoryRank = FactoryTab:Group({ 
+    Title = "Renacimiento" 
+})
+
+FactoryRank:Button({
+    Title = "Intentar Rebirth",
     Callback = function()
-        local remote = game:GetService("ReplicatedStorage"):FindFirstChild("UnlockAllBottoms") -- Usamos el nombre exacto que viste
+        local remote = game:GetService("ReplicatedStorage").Events:FindFirstChild("IsRebirthButtonPurchasable")
         if remote then
-            remote:FireServer()
-            WindUI:Notify({Title = "Tycoon", Content = "Intentando desbloquear todo..."})
+            -- Intentamos activar el renacimiento
+            pcall(function() remote:FireServer() end)
+            pcall(function() remote:InvokeServer() end)
         end
     end
 })
-
--- GRUPO: PRESTIGIO
-local TycoonRank = TycoonTab:Group({ 
-    Title = "Rango y Renacimiento" 
-})
-
-TycoonRank:Button({
-    Title = "Renacer Automático (Rebirth)",
-    Callback = function()
-        local remote = game:GetService("ReplicatedStorage"):FindFirstChild("RebirthPlayer")
-        if remote then
-            remote:FireServer()
-        end
-    end
-})
-
 
 -- --- PESTAÑA: HACK A BUSINESS ---
 local HABTab = SeccionJuegos:Tab({
