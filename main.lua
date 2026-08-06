@@ -539,3 +539,36 @@ DevTools:Button({
         loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()
     end
 })
+
+local DevTools = AjustesTab:Group({ Title = "Herramientas de Élite" })
+
+-- OPCIÓN 1: SIMPLESPY V3 (VERSIÓN FULL)
+-- Esta versión tiene todas las funciones de copia, bloqueo de remotes y visualización de argumentos complejos.
+DevTools:Button({
+    Title = "SimpleSpy V3 (Completo)",
+    Desc = "La versión más potente de SimpleSpy",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/SimpleSpySource.lua"))()
+        WindUI:Notify({Title = "Sistema", Content = "SimpleSpy Full Cargado"})
+    end
+})
+
+-- OPCIÓN 2: HYDROXIDE (EL "REY" DE LAS HERRAMIENTAS)
+-- Es mucho más que un spy. Permite ver constantes, upvalues y tiene un explorador de remotes profesional.
+DevTools:Button({
+    Title = "Cargar Hydroxide (Pro Spy)",
+    Desc = "Herramienta de nivel profesional",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Upbolt/Hydroxide/revision/oh/main.lua"))()
+        WindUI:Notify({Title = "Sistema", Content = "Hydroxide Cargado"})
+    end
+})
+
+-- OPCIÓN 3: TURTLE SPY
+-- Muy bueno para ver argumentos largos que otros spies cortan.
+DevTools:Button({
+    Title = "Cargar Turtle Spy",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Turtle-Brand/Turtle-Spy/main/source.lua"))()
+    end
+})
