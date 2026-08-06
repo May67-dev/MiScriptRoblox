@@ -255,14 +255,14 @@ CardFarmF:Toggle({ Title = "Auto-Comprar (Anti-Robux)", Callback = function(s) A
 CardFarmF:Toggle({ Title = "Auto-Rebirth Inteligente", Callback = function(s) AutoRebirthF = s end })
 CardFarmF:Toggle({ Title = "Auto-Mejoras Gemas", Callback = function(s) AutoUpgradesF = s end })
 
--- LÓGICA DE FÁBRICA (INGENIERÍA INVERSA)
+-- LÓGICA DE FÁBRICA (INGENIERÍA INVERSA + ANTI-SPAM)
 task.spawn(function()
     local Events = game:GetService("ReplicatedStorage"):WaitForChild("Events")
     
     while true do
         local tycoon = LP:FindFirstChild("TycoonOwned") and LP.TycoonOwned.Value
         
-        -- 1. Auto Collect (Lógica descompilada)
+        -- 1. Auto Collect (Dinero)
         if AutoCollectF and tycoon then
             pcall(function() 
                 local collectPart = tycoon:FindFirstChild("Build") and tycoon.Build:FindFirstChild("Collect")
@@ -270,7 +270,7 @@ task.spawn(function()
             end)
         end
         
-        -- 2. Auto Buy (Remote + Toque)
+        -- 2. Auto Buy (Botones)
         if AutoBuyF and tycoon then
             pcall(function()
                 for _, v in pairs(tycoon:GetDescendants()) do
@@ -285,7 +285,7 @@ task.spawn(function()
             end)
         end
         
-        -- 3. Auto Rebirth (Formato SimpleSpy)
+        -- 3. Auto Rebirth
         if AutoRebirthF and tycoon then
             pcall(function()
                 local args = { [1] = 184, [2] = 184, [3] = tycoon }
@@ -293,7 +293,15 @@ task.spawn(function()
             end)
         end
         
-        -- 4. Auto Upgrades (FILTRADO ANTI-ROBUX)
+        task.wait(0.8) -- Paquete principal rápido para collect y buy
+    end
+end)
+
+-- BUCLE SEPARADO PARA UPGRADES (MUCHO MÁS LENTO PARA EVITAR BUGS)
+task.spawn(function()
+    local Events = game:GetService("ReplicatedStorage"):WaitForChild("Events")
+    
+    while true do
         if AutoUpgradesF then
             pcall(function()
                 local Phonebook = require(game.ReplicatedStorage:WaitForChild("UpgradePhonebook"))
@@ -313,12 +321,12 @@ task.spawn(function()
                     
                     if not isRobux then
                         Events.UpgradesRelated.BuyUpgrade:FireServer(n, 1)
+                        task.wait(0.5) -- Pequeña pausa entre cada mejora para no saturar
                     end
                 end
             end)
         end
-        
-        task.wait(0.8)
+        task.wait(10) -- ¡Solo revisa y compra mejoras cada 10 segundos en lugar de cada segundo!
     end
 end)
 
