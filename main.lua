@@ -381,6 +381,66 @@ task.spawn(function()
     end
 end)
 
+-- --- 📈 SECCIÓN: LABORATORIO DE ESTADÍSTICAS ---
+local CardStats = FactoryTab:Section({ 
+    Title = "📈 STATS MODIFIER (BETA)", 
+    Box = true, 
+    BoxBorder = true 
+})
+
+CardStats:Button({
+    Title = "Subir 1 Nivel (Inyección XP)",
+    Desc = "Intenta darte XP para subir de nivel y ganar 1 gema",
+    Callback = function()
+        local Events = game:GetService("ReplicatedStorage").Events
+        pcall(function()
+            -- Buscamos el valor de XP. Si no sabes dónde está, 
+            -- intentaremos inyectar directamente al Nivel
+            local Level = LP.leaderstats:FindFirstChild("Level")
+            if Level then
+                -- Intentamos incrementar el nivel directamente en 1
+                Events.UpdateNormalData:FireServer("Increment", LP, Level, 1)
+                WindUI:Notify({Title = "Stats", Content = "Petición de +1 Nivel enviada."})
+            end
+        end)
+    end
+})
+
+CardStats:Button({
+    Title = "Gemas Gratis (Micro-Pack)",
+    Desc = "Intenta inyectar 10 gemas de forma segura",
+    Callback = function()
+        local Events = game:GetService("ReplicatedStorage").Events
+        pcall(function()
+            local Gems = LP.DataFolder:FindFirstChild("Gems")
+            if Gems then
+                -- Pedimos solo 10 para no activar alarmas
+                Events.UpdateNormalData:FireServer("Increment", LP, Gems, 10)
+            end
+        end)
+    end
+})
+
+CardStats:Button({
+    Title = "Loop de Nivel (Auto-Farm Gemas)",
+    Desc = "Sube niveles sin parar (si funciona el de arriba)",
+    Callback = function()
+        _G.LevelLoop = not _G.LevelLoop
+        task.spawn(function()
+            local Events = game:GetService("ReplicatedStorage").Events
+            local Level = LP.leaderstats:FindFirstChild("Level")
+            while _G.LevelLoop and Level do
+                pcall(function() 
+                    Events.UpdateNormalData:FireServer("Increment", LP, Level, 1) 
+                end)
+                task.wait(2) -- Esperamos 2 segundos entre niveles para disimular
+            end
+        end)
+        local estado = _G.LevelLoop and "Activado" or "Desactivado"
+        WindUI:Notify({Title = "Loop", Content = "Auto-Nivel: " .. estado})
+    end
+})
+
 -- ==========================================
 -- 7. PESTAÑA: AJUSTES (SISTEMA)
 -- ==========================================
