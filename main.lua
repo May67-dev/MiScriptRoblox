@@ -320,53 +320,69 @@ FactoryFarm:Toggle({
     Callback = function(s) AutoRebirth = s end
 })
 
--- LÓGICA DE AUTOMATIZACIÓN
+-- LÓGICA DE AUTOMATIZACIÓN CORREGIDA
 task.spawn(function()
     local Events = game:GetService("ReplicatedStorage").Events
     while true do
-        -- Auto Cobrar
+        -- 1. Auto Cobrar (Sin cambios)
         if AutoCollectFactory then
             pcall(function() Events.CollectMoney:FireServer() end)
         end
         
-        -- Auto Comprar (Busca botones en el mapa)
+        -- 2. Auto Comprar Botones (FILTRADO)
         if AutoBuyButtons then
             pcall(function()
-                -- Buscamos los botones en el Tycoon del jugador
-                -- MM2 usaba Workspace, aquí buscaremos botones con TouchTransmitter
                 for _, v in pairs(workspace:GetDescendants()) do
+                    -- Buscamos botones que tengan un precio
                     if v.Name == "TouchInterest" and v.Parent and v.Parent:FindFirstChild("Price") then
-                        firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, v.Parent, 0)
-                        firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, v.Parent, 1)
+                        local button = v.Parent
+                        local priceValue = button.Price.Value
+                        
+                        -- FILTRO: Solo si el precio es mayor a 0 (Los de Robux suelen ser 0 o -1 en el valor de Price)
+                        -- Y solo si NO tiene un ID de Gamepass/Producto asociado
+                        if priceValue > 0 and not button:FindFirstChild("GamepassID") and not button:FindFirstChild("ProductID") then
+                            -- Verificamos si tenemos dinero suficiente para no spamear
+                            if game.Players.LocalPlayer.DataFolder.Money.Value >= priceValue then
+                                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, button, 0)
+                                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, button, 1)
+                            end
+                        end
                     end
                 end
             end)
         end
         
-        -- Auto Rebirth
+        -- 3. Auto Rebirth
         if AutoRebirth then
             pcall(function() Events.RequestRebirth:FireServer() end)
         end
         
-        task.wait(0.5)
+        task.wait(0.8) -- Aumentamos un poco el tiempo para evitar lag por el escaneo
     end
 end)
 
--- --- MEJORAS DE GEMAS ---
-local FactoryUpgrades = FactoryTab:Group({ Title = "Mejoras de Gemas" })
-
+-- --- MEJORAS DE GEMAS (FILTRADAS) ---
 FactoryUpgrades:Button({
-    Title = "Comprar Todas las Mejoras",
-    Desc = "Gasta tus gemas en todo lo disponible",
+    Title = "Comprar Mejoras Gratuitas",
+    Desc = "Solo gasta gemas (Ignora Robux)",
     Callback = function()
         local upgradeRemote = game:GetService("ReplicatedStorage").Events.UpgradesRelated:FindFirstChild("BuyUpgrade")
         if upgradeRemote then
-            -- Lista de nombres de mejoras que vimos en tu DataFolder
-            local upgrades = {"CoinMultiplier", "GemChance", "DoubleCoinChance", "DoubleGemChance", "ConveyorSpeed", "AutoCollectChance"}
-            for _, name in pairs(upgrades) do
+            -- Lista de mejoras que confirmamos que son por gemas en tu imagen
+            local safeUpgrades = {
+                "CoinMultiplier", 
+                "GemChance", 
+                "DoubleCoinChance", 
+                "DoubleGemChance", 
+                "ConveyorSpeed", 
+                "AutoCollectChance",
+                "IncomeTracker",
+                "OreLimit"
+            }
+            for _, name in pairs(safeUpgrades) do
                 pcall(function() upgradeRemote:FireServer(name) end)
             end
-            WindUI:Notify({Title = "Upgrades", Content = "Intentando comprar mejoras..."})
+            WindUI:Notify({Title = "Upgrades", Content = "Mejoras de gemas procesadas."})
         end
     end
 })
