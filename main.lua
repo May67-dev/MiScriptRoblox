@@ -269,18 +269,17 @@ MM2Combat:Toggle({
 })
 
 -- ==========================================
--- 6. PESTAÑA: FACTORY TYCOON (GOD MODE)
+-- 6. PESTAÑA: FACTORY TYCOON (VERSIÓN FINAL SIN BUGS)
 -- ==========================================
 local FactoryTab = SeccionJuegos:Tab({
     Title = "Factory Tycoon",
     Icon = "solar:factory-bold"
 })
 
--- --- MONITOR DE RECURSOS ---
-local FactoryStats = FactoryTab:Group({ Title = "Monitor de Recursos" })
-local MoneyLabel = FactoryStats:Section({ Title = "💵 Efectivo: $0" })
-local GemsLabel = FactoryStats:Section({ Title = "💎 Gemas: 0" })
-local RebirthLabel = FactoryStats:Section({ Title = "👑 Rebirths: 0" })
+-- 1. MONITOR DE RECURSOS (Directo en la pestaña para evitar el bug vertical)
+local MoneyLabel = FactoryTab:Section({ Title = "💵 Efectivo: $0" })
+local GemsLabel = FactoryTab:Section({ Title = "💎 Gemas: 0" })
+local RebirthLabel = FactoryTab:Section({ Title = "👑 Rebirths: 0" })
 
 task.spawn(function()
     while true do
@@ -294,57 +293,70 @@ task.spawn(function()
     end
 end)
 
--- --- AUTOMATIZACIÓN TOTAL ---
-local FactoryFarm = FactoryTab:Group({ Title = "Automatización" })
-
--- Auto-Cobrar (Ya funcionaba)
+-- 2. CONTROLES DE AUTOMATIZACIÓN
 local AutoCollectFactory = false
-FactoryFarm:Toggle({
+local AutoBuyButtons = false
+local AutoRebirth = false
+
+FactoryTab:Toggle({
     Title = "Auto-Cobrar Dinero",
+    Desc = "Recoge el dinero de las máquinas",
     Callback = function(s) AutoCollectFactory = s end
 })
 
--- NUEVO: Auto-Comprar Botones (Usa ButtonUsed)
-local AutoBuyButtons = false
-FactoryFarm:Toggle({
+FactoryTab:Toggle({
     Title = "Auto-Comprar Botones",
-    Desc = "Compra todo lo que puedas pagar",
+    Desc = "Ignora los de Robux automáticamente",
     Callback = function(s) AutoBuyButtons = s end
 })
 
--- NUEVO: Auto-Rebirth (Usa RequestRebirth)
-local AutoRebirth = false
-FactoryFarm:Toggle({
+FactoryTab:Toggle({
     Title = "Auto-Rebirth",
-    Desc = "Renace automáticamente al terminar",
+    Desc = "Renace al completar la fábrica",
     Callback = function(s) AutoRebirth = s end
 })
 
--- LÓGICA DE AUTOMATIZACIÓN CORREGIDA
+-- 3. BOTÓN DE MEJORAS (RESTAURADO)
+FactoryTab:Button({
+    Title = "Comprar Mejoras de Gemas",
+    Desc = "Gasta tus gemas en multiplicadores",
+    Callback = function()
+        local upgradeRemote = game:GetService("ReplicatedStorage").Events.UpgradesRelated:FindFirstChild("BuyUpgrade")
+        if upgradeRemote then
+            local safeUpgrades = {"CoinMultiplier", "GemChance", "DoubleCoinChance", "DoubleGemChance", "ConveyorSpeed", "AutoCollectChance", "IncomeTracker", "OreLimit"}
+            for _, name in pairs(safeUpgrades) do
+                pcall(function() upgradeRemote:FireServer(name) end)
+            end
+            WindUI:Notify({Title = "Upgrades", Content = "Mejoras procesadas"})
+        end
+    end
+})
+
+-- LÓGICA DE FUNCIONAMIENTO (CORREGIDA)
 task.spawn(function()
     local Events = game:GetService("ReplicatedStorage").Events
     while true do
-        -- 1. Auto Cobrar (Sin cambios)
         if AutoCollectFactory then
             pcall(function() Events.CollectMoney:FireServer() end)
         end
         
-        -- 2. Auto Comprar Botones (FILTRADO)
         if AutoBuyButtons then
             pcall(function()
                 for _, v in pairs(workspace:GetDescendants()) do
-                    -- Buscamos botones que tengan un precio
+                    -- Detectamos botones de compra
                     if v.Name == "TouchInterest" and v.Parent and v.Parent:FindFirstChild("Price") then
-                        local button = v.Parent
-                        local priceValue = button.Price.Value
+                        local btn = v.Parent
+                        local price = btn.Price.Value
                         
-                        -- FILTRO: Solo si el precio es mayor a 0 (Los de Robux suelen ser 0 o -1 en el valor de Price)
-                        -- Y solo si NO tiene un ID de Gamepass/Producto asociado
-                        if priceValue > 0 and not button:FindFirstChild("GamepassID") and not button:FindFirstChild("ProductID") then
-                            -- Verificamos si tenemos dinero suficiente para no spamear
-                            if game.Players.LocalPlayer.DataFolder.Money.Value >= priceValue then
-                                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, button, 0)
-                                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, button, 1)
+                        -- FILTRO MEJORADO:
+                        -- 1. Que no pida Robux (GamepassID o ProductID)
+                        -- 2. Que el nombre no diga "Robux" o "Gamepass"
+                        local isRobux = btn:FindFirstChild("GamepassID") or btn:FindFirstChild("ProductID") or string.find(string.lower(btn.Name), "robux") or string.find(string.lower(btn.Name), "gamepass")
+                        
+                        if not isRobux and price >= 0 then
+                            if game.Players.LocalPlayer.DataFolder.Money.Value >= price then
+                                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, btn, 0)
+                                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, btn, 1)
                             end
                         end
                     end
@@ -352,40 +364,12 @@ task.spawn(function()
             end)
         end
         
-        -- 3. Auto Rebirth
         if AutoRebirth then
             pcall(function() Events.RequestRebirth:FireServer() end)
         end
-        
-        task.wait(0.8) -- Aumentamos un poco el tiempo para evitar lag por el escaneo
+        task.wait(0.8)
     end
 end)
-
--- --- MEJORAS DE GEMAS (FILTRADAS) ---
-FactoryUpgrades:Button({
-    Title = "Comprar Mejoras Gratuitas",
-    Desc = "Solo gasta gemas (Ignora Robux)",
-    Callback = function()
-        local upgradeRemote = game:GetService("ReplicatedStorage").Events.UpgradesRelated:FindFirstChild("BuyUpgrade")
-        if upgradeRemote then
-            -- Lista de mejoras que confirmamos que son por gemas en tu imagen
-            local safeUpgrades = {
-                "CoinMultiplier", 
-                "GemChance", 
-                "DoubleCoinChance", 
-                "DoubleGemChance", 
-                "ConveyorSpeed", 
-                "AutoCollectChance",
-                "IncomeTracker",
-                "OreLimit"
-            }
-            for _, name in pairs(safeUpgrades) do
-                pcall(function() upgradeRemote:FireServer(name) end)
-            end
-            WindUI:Notify({Title = "Upgrades", Content = "Mejoras de gemas procesadas."})
-        end
-    end
-})
 
 -- --- PESTAÑA: HACK A BUSINESS ---
 local HABTab = SeccionJuegos:Tab({
