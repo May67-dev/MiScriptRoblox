@@ -258,7 +258,6 @@ CardFarmF:Toggle({ Title = "Auto-Mejoras Gemas", Callback = function(s) AutoUpgr
 -- LÓGICA DE FÁBRICA (INGENIERÍA INVERSA)
 task.spawn(function()
     local Events = game:GetService("ReplicatedStorage"):WaitForChild("Events")
-    local RobuxNodes = require(game.ReplicatedStorage:WaitForChild("UpgradePhonebook")).RobuxPricedNodes
     
     while true do
         local tycoon = LP:FindFirstChild("TycoonOwned") and LP.TycoonOwned.Value
@@ -294,13 +293,31 @@ task.spawn(function()
             end)
         end
         
-        -- 4. Auto Upgrades
+        -- 4. Auto Upgrades (FILTRADO ANTI-ROBUX)
         if AutoUpgradesF then
             pcall(function()
-                local list = {"CoinMultiplier", "GemChance", "DoubleCoinChance", "DoubleGemChance", "ConveyorSpeed", "AutoCollectChance"}
-                for _, n in pairs(list) do Events.UpgradesRelated.BuyUpgrade:FireServer(n, 1) end
+                local Phonebook = require(game.ReplicatedStorage:WaitForChild("UpgradePhonebook"))
+                local RobuxNodes = Phonebook.RobuxPricedNodes
+                local list = {"CoinMultiplier", "GemChance", "DoubleCoinChance", "DoubleGemChance", "ConveyorSpeed", "AutoCollectChance", "ShinyValue", "UpgraderMulti", "OreLimit"}
+                
+                for _, n in pairs(list) do
+                    local nodeId = Phonebook.getNodeId(n)
+                    local isRobux = false
+                    
+                    for robuxNode, _ in pairs(RobuxNodes) do
+                        if robuxNode == (nodeId .. "1") then
+                            isRobux = true
+                            break
+                        end
+                    end
+                    
+                    if not isRobux then
+                        Events.UpgradesRelated.BuyUpgrade:FireServer(n, 1)
+                    end
+                end
             end)
         end
+        
         task.wait(0.8)
     end
 end)
