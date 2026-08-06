@@ -269,80 +269,104 @@ MM2Combat:Toggle({
 })
 
 -- ==========================================
--- 6. PESTAÑA: MAGNATE DE FÁBRICAS
+-- 6. PESTAÑA: FACTORY TYCOON (GOD MODE)
 -- ==========================================
 local FactoryTab = SeccionJuegos:Tab({
     Title = "Factory Tycoon",
     Icon = "solar:factory-bold"
 })
 
--- --- GRUPO 1: ESTADO DE LA FÁBRICA (DISEÑO BENTO) ---
-local FactoryStats = FactoryTab:Group({ 
-    Title = "Monitor de Recursos" 
-})
-
+-- --- MONITOR DE RECURSOS ---
+local FactoryStats = FactoryTab:Group({ Title = "Monitor de Recursos" })
 local MoneyLabel = FactoryStats:Section({ Title = "💵 Efectivo: $0" })
-local ToCollectLabel = FactoryStats:Section({ Title = "📥 Por Recoger: $0" })
 local GemsLabel = FactoryStats:Section({ Title = "💎 Gemas: 0" })
+local RebirthLabel = FactoryStats:Section({ Title = "👑 Rebirths: 0" })
 
--- Bucle para actualizar tus datos en el Hub
 task.spawn(function()
     while true do
         pcall(function()
             local data = game.Players.LocalPlayer:WaitForChild("DataFolder")
             MoneyLabel:SetTitle("💵 Efectivo: $" .. data.Money.Value)
-            ToCollectLabel:SetTitle("📥 Por Recoger: $" .. data.ToCollect.Value)
             GemsLabel:SetTitle("💎 Gemas: " .. data.Gems.Value)
+            RebirthLabel:SetTitle("👑 Rebirths: " .. data.Rebirths.Value)
         end)
         task.wait(1)
     end
 end)
 
--- --- GRUPO 2: AUTOMATIZACIÓN SEGURA ---
-local FactoryFarm = FactoryTab:Group({ 
-    Title = "Automatización" 
-})
+-- --- AUTOMATIZACIÓN TOTAL ---
+local FactoryFarm = FactoryTab:Group({ Title = "Automatización" })
 
+-- Auto-Cobrar (Ya funcionaba)
 local AutoCollectFactory = false
-local FactoryDelay = 1.0 -- Retraso inicial seguro
-
-FactoryFarm:Slider({
-    Title = "Retraso de Seguridad",
-    Desc = "Segundos entre cada cobro (1.0 es seguro)",
-    Value = {Min = 0.1, Max = 10, Default = 1},
-    Callback = function(v) FactoryDelay = v end
-})
-
 FactoryFarm:Toggle({
     Title = "Auto-Cobrar Dinero",
-    Desc = "Recoge el dinero acumulado automáticamente",
-    Callback = function(state)
-        AutoCollectFactory = state
-        task.spawn(function()
-            local remote = game:GetService("ReplicatedStorage").Events:FindFirstChild("CollectMoney")
-            while AutoCollectFactory do
-                if remote then
-                    remote:FireServer() -- Enviamos la señal de cobro
+    Callback = function(s) AutoCollectFactory = s end
+})
+
+-- NUEVO: Auto-Comprar Botones (Usa ButtonUsed)
+local AutoBuyButtons = false
+FactoryFarm:Toggle({
+    Title = "Auto-Comprar Botones",
+    Desc = "Compra todo lo que puedas pagar",
+    Callback = function(s) AutoBuyButtons = s end
+})
+
+-- NUEVO: Auto-Rebirth (Usa RequestRebirth)
+local AutoRebirth = false
+FactoryFarm:Toggle({
+    Title = "Auto-Rebirth",
+    Desc = "Renace automáticamente al terminar",
+    Callback = function(s) AutoRebirth = s end
+})
+
+-- LÓGICA DE AUTOMATIZACIÓN
+task.spawn(function()
+    local Events = game:GetService("ReplicatedStorage").Events
+    while true do
+        -- Auto Cobrar
+        if AutoCollectFactory then
+            pcall(function() Events.CollectMoney:FireServer() end)
+        end
+        
+        -- Auto Comprar (Busca botones en el mapa)
+        if AutoBuyButtons then
+            pcall(function()
+                -- Buscamos los botones en el Tycoon del jugador
+                -- MM2 usaba Workspace, aquí buscaremos botones con TouchTransmitter
+                for _, v in pairs(workspace:GetDescendants()) do
+                    if v.Name == "TouchInterest" and v.Parent and v.Parent:FindFirstChild("Price") then
+                        firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, v.Parent, 0)
+                        firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, v.Parent, 1)
+                    end
                 end
-                task.wait(FactoryDelay) -- Usamos el tiempo del Slider
-            end
-        end)
+            end)
+        end
+        
+        -- Auto Rebirth
+        if AutoRebirth then
+            pcall(function() Events.RequestRebirth:FireServer() end)
+        end
+        
+        task.wait(0.5)
     end
-})
+end)
 
--- --- GRUPO 3: PRESTIGIO ---
-local FactoryRank = FactoryTab:Group({ 
-    Title = "Renacimiento" 
-})
+-- --- MEJORAS DE GEMAS ---
+local FactoryUpgrades = FactoryTab:Group({ Title = "Mejoras de Gemas" })
 
-FactoryRank:Button({
-    Title = "Intentar Rebirth",
+FactoryUpgrades:Button({
+    Title = "Comprar Todas las Mejoras",
+    Desc = "Gasta tus gemas en todo lo disponible",
     Callback = function()
-        local remote = game:GetService("ReplicatedStorage").Events:FindFirstChild("IsRebirthButtonPurchasable")
-        if remote then
-            -- Intentamos activar el renacimiento
-            pcall(function() remote:FireServer() end)
-            pcall(function() remote:InvokeServer() end)
+        local upgradeRemote = game:GetService("ReplicatedStorage").Events.UpgradesRelated:FindFirstChild("BuyUpgrade")
+        if upgradeRemote then
+            -- Lista de nombres de mejoras que vimos en tu DataFolder
+            local upgrades = {"CoinMultiplier", "GemChance", "DoubleCoinChance", "DoubleGemChance", "ConveyorSpeed", "AutoCollectChance"}
+            for _, name in pairs(upgrades) do
+                pcall(function() upgradeRemote:FireServer(name) end)
+            end
+            WindUI:Notify({Title = "Upgrades", Content = "Intentando comprar mejoras..."})
         end
     end
 })
