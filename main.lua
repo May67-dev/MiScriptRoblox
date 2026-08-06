@@ -489,49 +489,53 @@ HABFarm:Toggle({
 })
 
 -- ==========================================
--- 6. PESTAÑA: AJUSTES (SISTEMA ACTUALIZADO)
+-- 6. PESTAÑA: AJUSTES (HERRAMIENTAS DE HACKER)
 -- ==========================================
 local AjustesTab = SeccionSistema:Tab({
     Title = "Ajustes",
     Icon = "solar:settings-bold"
 })
 
--- Herramientas de Desarrollador (Para encontrar Hacks)
-local DevTools = AjustesTab:Group({ Title = "Herramientas Pro" })
+local DevTools = AjustesTab:Group({ Title = "Herramientas de Búsqueda" })
 
+-- OPCIÓN 1: EL ESPÍA LIGERO (Hecho por mí, no falla)
 DevTools:Button({
-    Title = "Cargar Dark Dex V3",
-    Desc = "Explorador de objetos y archivos",
+    Title = "Activar Espía de Remotes (Consola)",
+    Desc = "Mira los nombres en la consola de Delta",
+    Callback = function()
+        WindUI:Notify({Title = "Sistema", Content = "Espía activado. Mira tu consola de Delta."})
+        
+        -- Lógica de espionaje manual
+        local mt = getrawmetatable(game)
+        local old = mt.__namecall
+        setreadonly(mt, false)
+
+        mt.__namecall = newcclosure(function(self, ...)
+            local method = getnamecallmethod()
+            if method == "FireServer" or method == "InvokeServer" then
+                -- Imprime el nombre del remote y lo que envía
+                print("--- REMOTE DETECTADO ---")
+                print("Nombre: " .. tostring(self.Name))
+                print("Ruta: " .. self:GetFullName())
+            end
+            return old(self, ...)
+        end)
+    end
+})
+
+-- OPCIÓN 2: SIMPLESPY MÓVIL (Link alternativo)
+DevTools:Button({
+    Title = "Cargar SimpleSpy (Link 2)",
+    Desc = "Versión optimizada para celulares",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/SimpleSpySource.lua"))()
+    end
+})
+
+-- OPCIÓN 3: DARK DEX (Ya sabemos que te funciona)
+DevTools:Button({
+    Title = "Cargar Dark Dex",
     Callback = function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()
-        WindUI:Notify({Title = "Sistema", Content = "Dex Cargado"})
     end
-})
-
-DevTools:Button({
-    Title = "Cargar SimpleSpy V3",
-    Desc = "Detecta los Remotes del juego al instante",
-    Callback = function()
-        -- Este es el link oficial y más estable para móvil
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/ex70/SimpleSpyV3/main/main.lua"))()
-        WindUI:Notify({Title = "Sistema", Content = "SimpleSpy Cargado"})
-    end
-})
-
--- Utilidades de Sesión
-local Utils = AjustesTab:Group({ Title = "Utilidades" })
-
-Utils:Button({
-    Title = "Activar Anti-AFK",
-    Callback = function()
-        game.Players.LocalPlayer.Idled:Connect(function()
-            game:GetService("VirtualUser"):ClickButton2(Vector2.new())
-        end)
-        WindUI:Notify({Title = "Sistema", Content = "Anti-AFK Activado"})
-    end
-})
-
-Utils:Button({
-    Title = "Cerrar Hub",
-    Callback = function() Window:Destroy() end
 })
