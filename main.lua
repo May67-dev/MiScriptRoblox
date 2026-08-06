@@ -498,32 +498,7 @@ local AjustesTab = SeccionSistema:Tab({
 
 local DevTools = AjustesTab:Group({ Title = "Herramientas de Búsqueda" })
 
--- OPCIÓN 1: EL ESPÍA LIGERO (Hecho por mí, no falla)
-DevTools:Button({
-    Title = "Activar Espía de Remotes (Consola)",
-    Desc = "Mira los nombres en la consola de Delta",
-    Callback = function()
-        WindUI:Notify({Title = "Sistema", Content = "Espía activado. Mira tu consola de Delta."})
-        
-        -- Lógica de espionaje manual
-        local mt = getrawmetatable(game)
-        local old = mt.__namecall
-        setreadonly(mt, false)
-
-        mt.__namecall = newcclosure(function(self, ...)
-            local method = getnamecallmethod()
-            if method == "FireServer" or method == "InvokeServer" then
-                -- Imprime el nombre del remote y lo que envía
-                print("--- REMOTE DETECTADO ---")
-                print("Nombre: " .. tostring(self.Name))
-                print("Ruta: " .. self:GetFullName())
-            end
-            return old(self, ...)
-        end)
-    end
-})
-
--- OPCIÓN 2: SIMPLESPY MÓVIL (Link alternativo)
+-- OPCIÓN 1: SIMPLESPY MÓVIL (Link alternativo)
 DevTools:Button({
     Title = "Cargar SimpleSpy (Link 2)",
     Desc = "Versión optimizada para celulares",
@@ -532,43 +507,10 @@ DevTools:Button({
     end
 })
 
--- OPCIÓN 3: DARK DEX (Ya sabemos que te funciona)
+-- OPCIÓN 2: DARK DEX (Ya sabemos que te funciona)
 DevTools:Button({
     Title = "Cargar Dark Dex",
     Callback = function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()
-    end
-})
-
-local DevTools = AjustesTab:Group({ Title = "Herramientas de Élite" })
-
--- OPCIÓN 1: SIMPLESPY V3 (VERSIÓN FULL)
--- Esta versión tiene todas las funciones de copia, bloqueo de remotes y visualización de argumentos complejos.
-DevTools:Button({
-    Title = "SimpleSpy V3 (Completo)",
-    Desc = "La versión más potente de SimpleSpy",
-    Callback = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/SimpleSpySource.lua"))()
-        WindUI:Notify({Title = "Sistema", Content = "SimpleSpy Full Cargado"})
-    end
-})
-
--- OPCIÓN 2: HYDROXIDE (EL "REY" DE LAS HERRAMIENTAS)
--- Es mucho más que un spy. Permite ver constantes, upvalues y tiene un explorador de remotes profesional.
-DevTools:Button({
-    Title = "Cargar Hydroxide (Pro Spy)",
-    Desc = "Herramienta de nivel profesional",
-    Callback = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/Upbolt/Hydroxide/revision/oh/main.lua"))()
-        WindUI:Notify({Title = "Sistema", Content = "Hydroxide Cargado"})
-    end
-})
-
--- OPCIÓN 3: TURTLE SPY
--- Muy bueno para ver argumentos largos que otros spies cortan.
-DevTools:Button({
-    Title = "Cargar Turtle Spy",
-    Callback = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/Turtle-Brand/Turtle-Spy/main/source.lua"))()
     end
 })
