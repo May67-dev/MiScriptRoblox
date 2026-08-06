@@ -318,49 +318,66 @@ CardExp:Button({
     end
 })
 
--- LÓGICA DE FÁBRICA (ULTRA VELOCIDAD)
+-- LÓGICA DE FÁBRICA (VERSIÓN PROFESIONAL)
 task.spawn(function()
     local Events = game:GetService("ReplicatedStorage"):WaitForChild("Events")
+    
     while true do
         local tycoon = LP:FindFirstChild("TycoonOwned") and LP.TycoonOwned.Value
         
-        -- Auto Cobrar y Auto Comprar (0.5s es suficiente)
-        if AutoCollectF and tycoon then
-            pcall(function() Events.CollectMoney:FireServer(tycoon.Build.Collect) end)
-        end
-        
-        if AutoBuyF and tycoon then
-            pcall(function()
-                for _, v in pairs(tycoon:GetDescendants()) do
-                    if v:IsA("BasePart") and v:FindFirstChild("Price") then
-                        local isRobux = v:FindFirstChild("GamepassID") or v:FindFirstChild("ProductID")
-                        if not isRobux and v.Price.Value <= LP.DataFolder.Money.Value then
-                            Events.ButtonUsed:FireServer(v.Name)
-                            firetouchinterest(LP.Character.HumanoidRootPart, v, 0)
+        if tycoon then
+            -- 1. Auto Collect (Dinero al instante)
+            if AutoCollectF then
+                pcall(function() 
+                    local collectPart = tycoon:FindFirstChild("Build") and tycoon.Build:FindFirstChild("Collect")
+                    if collectPart then Events.CollectMoney:FireServer(collectPart) end
+                end)
+            end
+            
+            -- 2. Smart Auto-Buy (Solo lo que puedes pagar)
+            if AutoBuyF then
+                pcall(function()
+                    -- Buscamos directamente en la carpeta de botones de TU tycoon
+                    for _, btn in pairs(tycoon.Buttons:GetChildren()) do
+                        -- Verificamos si es un botón de compra normal
+                        local priceObj = btn:FindFirstChild("Price")
+                        local isVisible = btn:FindFirstChild("IsButtonVisible") and btn.IsButtonVisible.Value
+                        
+                        if priceObj and isVisible then
+                            -- Filtro Anti-Robux
+                            local isRobux = btn:FindFirstChild("GamepassID") or btn:FindFirstChild("ProductID")
+                            
+                            -- Si tenemos dinero suficiente y no es Robux
+                            if not isRobux and LP.DataFolder.Money.Value >= priceObj.Value then
+                                -- Enviamos la señal oficial
+                                Events.ButtonUsed:FireServer(btn.Name)
+                                -- Y lo tocamos por si el servidor requiere validación física
+                                if btn:FindFirstChild("Button") then
+                                    firetouchinterest(LP.Character.HumanoidRootPart, btn.Button.Part, 0)
+                                    firetouchinterest(LP.Character.HumanoidRootPart, btn.Button.Part, 1)
+                                end
+                            end
                         end
                     end
-                end
-            end)
+                end)
+            end
         end
-        task.wait(0.5)
+        task.wait(0.5) -- Velocidad equilibrada para evitar lag
     end
 end)
 
--- BUCLE INDEPENDIENTE: REBIRTH AGRESIVO
+-- BUCLE INDEPENDIENTE: REBIRTH (EL GLITCH)
 task.spawn(function()
     local Events = game:GetService("ReplicatedStorage"):WaitForChild("Events")
     while true do
         if AutoRebirthF then
             local tycoon = LP:FindFirstChild("TycoonOwned") and LP.TycoonOwned.Value
             if tycoon then
-                pcall(function()
-                    -- Fuego rápido (cada 0.1s) para entrar en el primer milisegundo disponible
-                    local args = { [1] = 653, [2] = 653, [3] = tycoon }
-                    Events.RequestRebirth:FireServer(unpack(args))
-                end)
+                -- Seguimos usando el código 184 que rompe la lógica del juego
+                pcall(function() Events.RequestRebirth:FireServer(653, 653, tycoon) end)
             end
         end
-        task.wait(0.1) -- Intenta renacer 10 veces por segundo
+        task.wait(1) -- Esperamos 1 segundo entre intentos para dejar que el servidor procese
     end
 end)
 
