@@ -269,17 +269,64 @@ MM2Combat:Toggle({
 })
 
 -- ==========================================
--- 6. PESTAÑA: FACTORY TYCOON (VERSIÓN FINAL SIN BUGS)
+-- 3. PESTAÑA: HOME (BENTO BOX FUTURISTA MORADO/AZUL)
+-- ==========================================
+local HomeTab = SeccionHome:Tab({
+    Title = "Dashboard",
+    Icon = "solar:widget-bold"
+})
+
+-- OBTENCIÓN DE DATOS (Basado en Archivo 2 y 4)
+local userId = game.Players.LocalPlayer.UserId
+local fotoUrl = "rbxthumb://type=AvatarHeadShot&id=" .. userId .. "&w=420&h=420"
+
+-- --- TARJETA: IDENTIDAD DIGITAL ---
+local CardPerfil = HomeTab:Section({
+    Title = "🔮 IDENTIDAD DIGITAL",
+    Box = true,
+    BoxBorder = true
+})
+
+CardPerfil:Image({
+    Image = fotoUrl,
+    AspectRatio = "1:1",
+    Radius = 100
+})
+
+CardPerfil:Section({ Title = "👤 Usuario: " .. game.Players.LocalPlayer.Name })
+CardPerfil:Section({ Title = "📅 Antigüedad: " .. game.Players.LocalPlayer.AccountAge .. " días" })
+
+-- --- TARJETA: ESTADO DEL SISTEMA ---
+local CardSesion = HomeTab:Section({
+    Title = "🌌 MONITOR DE SISTEMA",
+    Box = true,
+    BoxBorder = true
+})
+
+local TimeLabel = CardSesion:Section({ Title = "⏳ Tiempo Activo: 0h 0m 0s" })
+CardSesion:Section({ Title = "💎 Status: NC HUB Operacional" })
+
+-- Bucle de tiempo
+task.spawn(function()
+    while true do
+        local seg = os.time() - TiempoInicio
+        local texto = string.format("%dh %dm %ds", math.floor(seg/3600), math.floor(seg/60)%60, seg%60)
+        pcall(function() TimeLabel:SetTitle("⏳ Tiempo Activo: " .. texto) end)
+        task.wait(1)
+    end
+end)
+
+-- ==========================================
+-- 6. PESTAÑA: FACTORY TYCOON (ANTI-ROBUX)
 -- ==========================================
 local FactoryTab = SeccionJuegos:Tab({
     Title = "Factory Tycoon",
     Icon = "solar:factory-bold"
 })
 
--- 1. MONITOR DE RECURSOS (Directo en la pestaña para evitar el bug vertical)
+-- MONITOR DE RECURSOS
 local MoneyLabel = FactoryTab:Section({ Title = "💵 Efectivo: $0" })
 local GemsLabel = FactoryTab:Section({ Title = "💎 Gemas: 0" })
-local RebirthLabel = FactoryTab:Section({ Title = "👑 Rebirths: 0" })
 
 task.spawn(function()
     while true do
@@ -287,87 +334,59 @@ task.spawn(function()
             local data = game.Players.LocalPlayer:WaitForChild("DataFolder")
             MoneyLabel:SetTitle("💵 Efectivo: $" .. data.Money.Value)
             GemsLabel:SetTitle("💎 Gemas: " .. data.Gems.Value)
-            RebirthLabel:SetTitle("👑 Rebirths: " .. data.Rebirths.Value)
         end)
         task.wait(1)
     end
 end)
 
--- 2. CONTROLES DE AUTOMATIZACIÓN
-local AutoCollectFactory = false
-local AutoBuyButtons = false
-local AutoRebirth = false
+-- AUTOMATIZACIÓN INTELIGENTE
+local AutoCollect = false
+local AutoBuySafe = false
 
 FactoryTab:Toggle({
     Title = "Auto-Cobrar Dinero",
-    Desc = "Recoge el dinero de las máquinas",
-    Callback = function(s) AutoCollectFactory = s end
+    Callback = function(s) AutoCollect = s end
 })
 
 FactoryTab:Toggle({
-    Title = "Auto-Comprar Botones",
-    Desc = "Ignora los de Robux automáticamente",
-    Callback = function(s) AutoBuyButtons = s end
+    Title = "Auto-Comprar (SIN ROBUX)",
+    Desc = "Usa la lista negra del Archivo 4",
+    Callback = function(s) AutoBuySafe = s end
 })
 
-FactoryTab:Toggle({
-    Title = "Auto-Rebirth",
-    Desc = "Renace al completar la fábrica",
-    Callback = function(s) AutoRebirth = s end
-})
-
--- 3. BOTÓN DE MEJORAS (RESTAURADO)
-FactoryTab:Button({
-    Title = "Comprar Mejoras de Gemas",
-    Desc = "Gasta tus gemas en multiplicadores",
-    Callback = function()
-        local upgradeRemote = game:GetService("ReplicatedStorage").Events.UpgradesRelated:FindFirstChild("BuyUpgrade")
-        if upgradeRemote then
-            local safeUpgrades = {"CoinMultiplier", "GemChance", "DoubleCoinChance", "DoubleGemChance", "ConveyorSpeed", "AutoCollectChance", "IncomeTracker", "OreLimit"}
-            for _, name in pairs(safeUpgrades) do
-                pcall(function() upgradeRemote:FireServer(name) end)
-            end
-            WindUI:Notify({Title = "Upgrades", Content = "Mejoras procesadas"})
-        end
-    end
-})
-
--- LÓGICA DE FUNCIONAMIENTO (CORREGIDA)
+-- LÓGICA DE COMPRA SEGURA (Basada en Archivo 4)
 task.spawn(function()
-    local Events = game:GetService("ReplicatedStorage").Events
+    local Phonebook = require(game.ReplicatedStorage.UpgradePhonebook)
+    local RobuxNodes = Phonebook.RobuxPricedNodes
+    
     while true do
-        if AutoCollectFactory then
-            pcall(function() Events.CollectMoney:FireServer() end)
+        if AutoCollect then
+            pcall(function() game.ReplicatedStorage.Events.CollectMoney:FireServer() end)
         end
         
-        if AutoBuyButtons then
+        if AutoBuySafe then
             pcall(function()
                 for _, v in pairs(workspace:GetDescendants()) do
-                    -- Detectamos botones de compra
                     if v.Name == "TouchInterest" and v.Parent and v.Parent:FindFirstChild("Price") then
                         local btn = v.Parent
-                        local price = btn.Price.Value
-                        
-                        -- FILTRO MEJORADO:
-                        -- 1. Que no pida Robux (GamepassID o ProductID)
-                        -- 2. Que el nombre no diga "Robux" o "Gamepass"
-                        local isRobux = btn:FindFirstChild("GamepassID") or btn:FindFirstChild("ProductID") or string.find(string.lower(btn.Name), "robux") or string.find(string.lower(btn.Name), "gamepass")
-                        
-                        if not isRobux and price >= 0 then
-                            if game.Players.LocalPlayer.DataFolder.Money.Value >= price then
-                                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, btn, 0)
-                                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, btn, 1)
+                        -- Verificamos si el botón es de Robux consultando la lista que encontraste
+                        local isRobux = false
+                        for nodeName, _ in pairs(RobuxNodes) do
+                            if string.find(btn.Name, nodeName) then
+                                isRobux = true
+                                break
                             end
+                        end
+                        
+                        if not isRobux and btn.Price.Value <= game.Players.LocalPlayer.DataFolder.Money.Value then
+                            firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, btn, 0)
+                            firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, btn, 1)
                         end
                     end
                 end
             end)
         end
-        
-        if AutoRebirth then
-            pcall(function() Events.RequestRebirth:FireServer() end)
-        end
-        task.wait(0.8)
+        task.wait(1)
     end
 end)
 
