@@ -317,16 +317,28 @@ task.spawn(function()
 end)
 
 -- ==========================================
--- 6. PESTAÑA: FACTORY TYCOON (ANTI-ROBUX)
+-- 6. PESTAÑA: FACTORY TYCOON (FIXED & FULL)
 -- ==========================================
 local FactoryTab = SeccionJuegos:Tab({
     Title = "Factory Tycoon",
     Icon = "solar:factory-bold"
 })
 
--- MONITOR DE RECURSOS
-local MoneyLabel = FactoryTab:Section({ Title = "💵 Efectivo: $0" })
-local GemsLabel = FactoryTab:Section({ Title = "💎 Gemas: 0" })
+-- VARIABLES DE CONTROL (Scope correcto para que funcionen)
+local AutoCollect = false
+local AutoBuySafe = false
+local AutoRebirth = false
+local DelaySeguridad = 0.8
+
+-- --- MONITOR DE RECURSOS (BENTO BOX) ---
+local CardStats = FactoryTab:Section({ 
+    Title = "📊 ESTADO DE FÁBRICA", 
+    Box = true, 
+    BoxBorder = true 
+})
+
+local MoneyLabel = CardStats:Section({ Title = "💵 Efectivo: $0" })
+local GemsLabel = CardStats:Section({ Title = "💎 Gemas: 0" })
 
 task.spawn(function()
     while true do
@@ -339,45 +351,85 @@ task.spawn(function()
     end
 end)
 
--- LÓGICA DE AUTOMATIZACIÓN (VERSIÓN 2.0 - BASADA EN TUS ARCHIVOS)
+-- --- AUTOMATIZACIÓN (BENTO BOX) ---
+local CardFarm = FactoryTab:Section({ 
+    Title = "🤖 AUTOMATIZACIÓN", 
+    Box = true, 
+    BoxBorder = true 
+})
+
+CardFarm:Slider({
+    Title = "Retraso (Seguridad)",
+    Value = {Min = 0.1, Max = 5, Default = 0.8},
+    Callback = function(v) DelaySeguridad = v end
+})
+
+CardFarm:Toggle({
+    Title = "Auto-Cobrar Dinero",
+    Callback = function(s) AutoCollect = s end
+})
+
+CardFarm:Toggle({
+    Title = "Auto-Comprar (NO ROBUX)",
+    Callback = function(s) AutoBuySafe = s end
+})
+
+CardFarm:Toggle({
+    Title = "Auto-Rebirth",
+    Callback = function(s) AutoRebirth = s end
+})
+
+-- --- MEJORAS (BENTO BOX) ---
+local CardUpgrades = FactoryTab:Section({ 
+    Title = "✨ MEJORAS DE GEMAS", 
+    Box = true, 
+    BoxBorder = true 
+})
+
+CardUpgrades:Button({
+    Title = "Comprar Mejoras Gratis",
+    Callback = function()
+        local remote = game:GetService("ReplicatedStorage").Events.UpgradesRelated:FindFirstChild("BuyUpgrade")
+        if remote then
+            local lista = {"CoinMultiplier", "GemChance", "DoubleCoinChance", "DoubleGemChance", "ConveyorSpeed", "AutoCollectChance"}
+            for _, name in pairs(lista) do
+                pcall(function() remote:FireServer(name) end)
+            end
+            WindUI:Notify({Title = "Upgrades", Content = "Procesando mejoras..."})
+        end
+    end
+})
+
+-- ==========================================
+-- LÓGICA DE EJECUCIÓN (UNIFICADA)
+-- ==========================================
 task.spawn(function()
     local Events = game:GetService("ReplicatedStorage"):WaitForChild("Events")
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    
-    -- Intentamos cargar el Phonebook de forma segura
-    local Phonebook = nil
-    pcall(function()
-        Phonebook = require(ReplicatedStorage:WaitForChild("UpgradePhonebook"))
-    end)
     
     while true do
-        -- 1. Auto Cobrar (Funciona)
+        -- 1. Auto Cobrar
         if AutoCollect then
             pcall(function() Events.CollectMoney:FireServer() end)
         end
         
-        -- 2. Auto Comprar Botones (NUEVA LÓGICA)
+        -- 2. Auto Comprar Botones
         if AutoBuySafe then
             pcall(function()
-                -- Buscamos en la carpeta donde el juego guarda los botones del Tycoon
-                -- Normalmente en Tycoons, los botones están en Workspace.Tycoons.[TuNombre].Buttons
                 for _, v in pairs(workspace:GetDescendants()) do
-                    if v:IsA("BasePart") and v:FindFirstChild("TouchInterest") and v:FindFirstChild("Price") then
-                        local btn = v
+                    if v.Name == "TouchInterest" and v.Parent and v.Parent:FindFirstChild("Price") then
+                        local btn = v.Parent
                         local price = btn.Price.Value
                         local money = game.Players.LocalPlayer.DataFolder.Money.Value
                         
-                        -- FILTRO DE SEGURIDAD:
+                        -- Filtro de Robux
                         local esRobux = btn:FindFirstChild("GamepassID") or btn:FindFirstChild("ProductID")
                         
-                        -- Si tenemos dinero, no es de Robux y el precio es válido
                         if not esRobux and price >= 0 and money >= price then
-                            -- MÉTODO 1: Usar el Remote que encontraste (Más efectivo)
+                            -- Usamos el remote que descubriste
                             if Events:FindFirstChild("ButtonUsed") then
                                 Events.ButtonUsed:FireServer(btn.Name)
                             end
-                            
-                            -- MÉTODO 2: Simular toque (Respaldo)
+                            -- Respaldo físico
                             local root = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
                             if root then
                                 firetouchinterest(root, btn, 0)
@@ -394,7 +446,7 @@ task.spawn(function()
             pcall(function() Events.RequestRebirth:FireServer() end)
         end
         
-        task.wait(1) -- Un segundo de espera para no saturar el servidor
+        task.wait(DelaySeguridad)
     end
 end)
 
