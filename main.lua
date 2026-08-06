@@ -339,54 +339,62 @@ task.spawn(function()
     end
 end)
 
--- AUTOMATIZACIÓN INTELIGENTE
-local AutoCollect = false
-local AutoBuySafe = false
-
-FactoryTab:Toggle({
-    Title = "Auto-Cobrar Dinero",
-    Callback = function(s) AutoCollect = s end
-})
-
-FactoryTab:Toggle({
-    Title = "Auto-Comprar (SIN ROBUX)",
-    Desc = "Usa la lista negra del Archivo 4",
-    Callback = function(s) AutoBuySafe = s end
-})
-
--- LÓGICA DE COMPRA SEGURA (Basada en Archivo 4)
+-- LÓGICA DE AUTOMATIZACIÓN (VERSIÓN 2.0 - BASADA EN TUS ARCHIVOS)
 task.spawn(function()
-    local Phonebook = require(game.ReplicatedStorage.UpgradePhonebook)
-    local RobuxNodes = Phonebook.RobuxPricedNodes
+    local Events = game:GetService("ReplicatedStorage"):WaitForChild("Events")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    
+    -- Intentamos cargar el Phonebook de forma segura
+    local Phonebook = nil
+    pcall(function()
+        Phonebook = require(ReplicatedStorage:WaitForChild("UpgradePhonebook"))
+    end)
     
     while true do
+        -- 1. Auto Cobrar (Funciona)
         if AutoCollect then
-            pcall(function() game.ReplicatedStorage.Events.CollectMoney:FireServer() end)
+            pcall(function() Events.CollectMoney:FireServer() end)
         end
         
+        -- 2. Auto Comprar Botones (NUEVA LÓGICA)
         if AutoBuySafe then
             pcall(function()
+                -- Buscamos en la carpeta donde el juego guarda los botones del Tycoon
+                -- Normalmente en Tycoons, los botones están en Workspace.Tycoons.[TuNombre].Buttons
                 for _, v in pairs(workspace:GetDescendants()) do
-                    if v.Name == "TouchInterest" and v.Parent and v.Parent:FindFirstChild("Price") then
-                        local btn = v.Parent
-                        -- Verificamos si el botón es de Robux consultando la lista que encontraste
-                        local isRobux = false
-                        for nodeName, _ in pairs(RobuxNodes) do
-                            if string.find(btn.Name, nodeName) then
-                                isRobux = true
-                                break
-                            end
-                        end
+                    if v:IsA("BasePart") and v:FindFirstChild("TouchInterest") and v:FindFirstChild("Price") then
+                        local btn = v
+                        local price = btn.Price.Value
+                        local money = game.Players.LocalPlayer.DataFolder.Money.Value
                         
-                        if not isRobux and btn.Price.Value <= game.Players.LocalPlayer.DataFolder.Money.Value then
-                            firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, btn, 0)
-                            firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, btn, 1)
+                        -- FILTRO DE SEGURIDAD:
+                        local esRobux = btn:FindFirstChild("GamepassID") or btn:FindFirstChild("ProductID")
+                        
+                        -- Si tenemos dinero, no es de Robux y el precio es válido
+                        if not esRobux and price >= 0 and money >= price then
+                            -- MÉTODO 1: Usar el Remote que encontraste (Más efectivo)
+                            if Events:FindFirstChild("ButtonUsed") then
+                                Events.ButtonUsed:FireServer(btn.Name)
+                            end
+                            
+                            -- MÉTODO 2: Simular toque (Respaldo)
+                            local root = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                            if root then
+                                firetouchinterest(root, btn, 0)
+                                firetouchinterest(root, btn, 1)
+                            end
                         end
                     end
                 end
             end)
         end
-        task.wait(1)
+        
+        -- 3. Auto Rebirth
+        if AutoRebirth then
+            pcall(function() Events.RequestRebirth:FireServer() end)
+        end
+        
+        task.wait(1) -- Un segundo de espera para no saturar el servidor
     end
 end)
 
