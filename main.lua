@@ -32,6 +32,7 @@ local SeccionHome = Window:Section({ Title = "HOME" })
 local SeccionTrampas = Window:Section({ Title = "TRAMPAS" })
 local SeccionJuegos = Window:Section({ Title = "JUEGOS" })
 local SeccionSistema = Window:Section({ Title = "SISTEMA" })
+local SeccionGod = Window:Section({ Title = "GOD MODE" })
 
 -- ==========================================
 -- 3. PESTAÑA: DASHBOARD (DISEÑO BENTO BOX)
@@ -220,36 +221,32 @@ MM2Combat:Toggle({
 })
 
 -- ==========================================
--- 5. PESTAÑA: JUEGOS (FACTORY TYCOON)
+-- PESTAÑA: FACTORY TYCOON (MONITOR PRO)
 -- ==========================================
-local FactoryTab = SeccionJuegos:Tab({
-    Title = "Factory Tycoon",
-    Icon = "solar:factory-bold"
-})
-
-local AutoCollectF = false
-local AutoBuyF = false
-local AutoRebirthF = false
+local FactoryTab = SeccionJuegos:Tab({ Title = "Factory Tycoon", Icon = "solar:factory-bold" })
+local AutoCollectF, AutoBuyF, AutoRebirthF = false, false, false
 
 local CardStatsF = FactoryTab:Section({ Title = "📊 ESTADO DE FÁBRICA", Box = true, BoxBorder = true })
 local MoneyLabelF = CardStatsF:Section({ Title = "💵 Efectivo: $0" })
 local GemsLabelF = CardStatsF:Section({ Title = "💎 Gemas: 0" })
+local LevelLabelF = CardStatsF:Section({ Title = "🆙 Nivel: 0" })
 
 task.spawn(function()
     while true do
         pcall(function()
-            local data = LP:WaitForChild("DataFolder")
-            MoneyLabelF:SetTitle("💵 Efectivo: $" .. data.Money.Value)
-            GemsLabelF:SetTitle("💎 Gemas: " .. data.Gems.Value)
+            local df = LP:WaitForChild("DataFolder")
+            MoneyLabelF:SetTitle("💵 Efectivo: $" .. df.Money.Value)
+            GemsLabelF:SetTitle("💎 Gemas: " .. df.Gems.Value)
+            LevelLabelF:SetTitle("🆙 Nivel: " .. LP.leaderstats.Level.Value)
         end)
         task.wait(1)
     end
 end)
 
 local CardFarmF = FactoryTab:Section({ Title = "🤖 AUTOMATIZACIÓN", Box = true, BoxBorder = true })
-CardFarmF:Toggle({ Title = "Auto-Cobrar (Oficial)", Callback = function(s) AutoCollectF = s end })
-CardFarmF:Toggle({ Title = "Auto-Comprar (Anti-Robux)", Callback = function(s) AutoBuyF = s end })
-CardFarmF:Toggle({ Title = "Auto-Rebirth Inteligente", Callback = function(s) AutoRebirthF = s end })
+CardFarmF:Toggle({ Title = "Auto-Collect Remoto", Callback = function(s) AutoCollectF = s end })
+CardFarmF:Toggle({ Title = "Auto-Buy Inteligente", Callback = function(s) AutoBuyF = s end })
+CardFarmF:Toggle({ Title = "Auto-Rebirth Glitch", Callback = function(s) AutoRebirthF = s end })
 
 -- --- LABORATORIO EXPERIMENTAL (VERSIÓN FINAL CON INYECCIÓN) ---
 local CardExp = FactoryTab:Section({ 
@@ -318,66 +315,34 @@ CardExp:Button({
     end
 })
 
--- LÓGICA DE FÁBRICA (VERSIÓN PROFESIONAL)
+-- LÓGICA DE FÁBRICA (VERSIÓN 5.0)
 task.spawn(function()
     local Events = game:GetService("ReplicatedStorage"):WaitForChild("Events")
-    
     while true do
         local tycoon = LP:FindFirstChild("TycoonOwned") and LP.TycoonOwned.Value
-        
         if tycoon then
-            -- 1. Auto Collect (Dinero al instante)
-            if AutoCollectF then
-                pcall(function() 
-                    local collectPart = tycoon:FindFirstChild("Build") and tycoon.Build:FindFirstChild("Collect")
-                    if collectPart then Events.CollectMoney:FireServer(collectPart) end
-                end)
-            end
+            -- Auto Collect
+            if AutoCollectF then pcall(function() Events.CollectMoney:FireServer(tycoon.Build.Collect) end) end
             
-            -- 2. Smart Auto-Buy (Solo lo que puedes pagar)
+            -- Auto Buy Inteligente (Usa ButtonUsed real)
             if AutoBuyF then
                 pcall(function()
-                    -- Buscamos directamente en la carpeta de botones de TU tycoon
-                    for _, btn in pairs(tycoon.Buttons:GetChildren()) do
-                        -- Verificamos si es un botón de compra normal
-                        local priceObj = btn:FindFirstChild("Price")
-                        local isVisible = btn:FindFirstChild("IsButtonVisible") and btn.IsButtonVisible.Value
-                        
-                        if priceObj and isVisible then
-                            -- Filtro Anti-Robux
-                            local isRobux = btn:FindFirstChild("GamepassID") or btn:FindFirstChild("ProductID")
-                            
-                            -- Si tenemos dinero suficiente y no es Robux
-                            if not isRobux and LP.DataFolder.Money.Value >= priceObj.Value then
-                                -- Enviamos la señal oficial
-                                Events.ButtonUsed:FireServer(btn.Name)
-                                -- Y lo tocamos por si el servidor requiere validación física
-                                if btn:FindFirstChild("Button") then
-                                    firetouchinterest(LP.Character.HumanoidRootPart, btn.Button.Part, 0)
-                                    firetouchinterest(LP.Character.HumanoidRootPart, btn.Button.Part, 1)
+                    for _, v in pairs(tycoon.Buttons:GetChildren()) do
+                        if v:FindFirstChild("Price") and v:FindFirstChild("IsButtonVisible") and v.IsButtonVisible.Value then
+                            if not (v:FindFirstChild("GamepassID") or v:FindFirstChild("ProductID")) then
+                                if LP.DataFolder.Money.Value >= v.Price.Value then
+                                    Events.ButtonUsed:FireServer(v.Name)
                                 end
                             end
                         end
                     end
                 end)
             end
+            
+            -- Auto Rebirth Glitch
+            if AutoRebirthF then pcall(function() Events.RequestRebirth:FireServer(184, 184, tycoon) end) end
         end
-        task.wait(0.5) -- Velocidad equilibrada para evitar lag
-    end
-end)
-
--- BUCLE INDEPENDIENTE: REBIRTH (EL GLITCH)
-task.spawn(function()
-    local Events = game:GetService("ReplicatedStorage"):WaitForChild("Events")
-    while true do
-        if AutoRebirthF then
-            local tycoon = LP:FindFirstChild("TycoonOwned") and LP.TycoonOwned.Value
-            if tycoon then
-                -- Seguimos usando el código 184 que rompe la lógica del juego
-                pcall(function() Events.RequestRebirth:FireServer(653, 653, tycoon) end)
-            end
-        end
-        task.wait(1) -- Esperamos 1 segundo entre intentos para dejar que el servidor procese
+        task.wait(0.5)
     end
 end)
 
@@ -438,6 +403,45 @@ CardStats:Button({
         end)
         local estado = _G.LevelLoop and "Activado" or "Desactivado"
         WindUI:Notify({Title = "Loop", Content = "Auto-Nivel: " .. estado})
+    end
+})
+
+-- ==========================================
+-- PESTAÑA: GOD MODE (EXPLOITS CRÍTICOS)
+-- ==========================================
+local GodTab = SeccionGod:Tab({ Title = "Exploits", Icon = "solar:danger-bold" })
+
+local CardLevels = GodTab:Section({ Title = "📈 NIVELES Y GEMAS", Box = true, BoxBorder = true })
+CardLevels:Button({
+    Title = "Inyectar +10 Niveles (Gemas)",
+    Callback = function()
+        pcall(function()
+            for i = 1, 10 do
+                game:GetService("ReplicatedStorage").Events.UpdateNormalData:FireServer("Increment", LP, LP.leaderstats.Level, 1)
+                task.wait(0.1)
+            end
+        end)
+    end
+})
+
+CardLevels:Button({
+    Title = "Forzar Max XP",
+    Callback = function()
+        pcall(function()
+            game:GetService("ReplicatedStorage").Events.UpdateNormalData:FireServer("Increment", LP, LP.DataFolder.totalXp, 9999999)
+        end)
+    end
+})
+
+local CardAdmin = GodTab:Section({ Title = "🛡️ ADMIN SPOOF", Box = true, BoxBorder = true })
+CardAdmin:Button({
+    Title = "Spoof Admin Whitelist",
+    Callback = function()
+        pcall(function()
+            local val = Instance.new("IntValue", game.ReplicatedStorage.GameSettings.AdminWhitelist)
+            val.Name = "AdminID"; val.Value = LP.UserId
+            WindUI:Notify({ Title = "Admin", Content = "ID inyectada." })
+        end)
     end
 })
 
