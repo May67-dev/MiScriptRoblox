@@ -251,7 +251,7 @@ CardFarmF:Toggle({ Title = "Auto-Cobrar (Oficial)", Callback = function(s) AutoC
 CardFarmF:Toggle({ Title = "Auto-Comprar (Anti-Robux)", Callback = function(s) AutoBuyF = s end })
 CardFarmF:Toggle({ Title = "Auto-Rebirth Inteligente", Callback = function(s) AutoRebirthF = s end })
 
--- --- LABORATORIO EXPERIMENTAL (USAR CON PRECAUCIÓN) ---
+-- --- LABORATORIO EXPERIMENTAL (VERSIÓN FINAL CON INYECCIÓN) ---
 local CardExp = FactoryTab:Section({ 
     Title = "🧪 LABORATORIO (EXPERIMENTAL)", 
     Box = true, 
@@ -259,35 +259,39 @@ local CardExp = FactoryTab:Section({
 })
 
 CardExp:Button({
-    Title = "Desbloquear Pases (Server Spoof)",
+    Title = "Generar 1 Billón (Inyección)",
+    Desc = "Usa UpdateNormalData para sumar dinero",
     Callback = function()
-        local Events = game:GetService("ReplicatedStorage").Events
-        local pases = {"2xGems", "2xMoney", "2xXP", "AutoCollect", "ExtremeGrinder", "ShinyOres", "VIP"}
-        
-        for _, v in pairs(pases) do
+        pcall(function()
+            game:GetService("ReplicatedStorage").Events.UpdateNormalData:FireServer("Increment", LP, LP.DataFolder.Money, 1000000000)
+        end)
+        WindUI:Notify({Title = "NC HUB", Content = "Petición de 1B enviada."})
+    end
+})
+
+CardExp:Button({
+    Title = "Desbloquear Base Completa",
+    Desc = "Marca todos los botones como comprados",
+    Callback = function()
+        local tycoon = LP:FindFirstChild("TycoonOwned") and LP.TycoonOwned.Value
+        if tycoon then
             pcall(function()
-                -- Intentamos decirle al servidor que somos dueños
-                Events.GamepassRelated.UpdateGamepassOwnership:FireServer(v, true)
-                -- Activamos el efecto del pase
-                Events.GamepassEffect:FireServer(v)
+                for _, v in pairs(tycoon.Buttons:GetChildren()) do
+                    game:GetService("ReplicatedStorage").Events.UpdateNormalData:FireServer("Tycoon_SetTrue", LP, nil, v.Name)
+                end
             end)
+            WindUI:Notify({Title = "NC HUB", Content = "Desbloqueo masivo iniciado."})
         end
-        WindUI:Notify({Title = "Experimental", Content = "Señal de Gamepasses enviada."})
     end
 })
 
 CardExp:Button({
     Title = "Simular Pago (Replay Attack)",
-    Desc = "Reenvía el paquete encriptado que capturaste",
     Callback = function()
-        local Events = game:GetService("ReplicatedStorage").Events
         pcall(function()
-            local args = {
-                [1] = "\48\7\t\21vXX@o<\14-\8\5\2\2(\17DNtn^Y@?\n\17\17/'\19\11\20:\1\11/XDNx{9\13\21\2\17\0\2\"\28\8\1\t\26" .. "SZvPJ_"
-            }
-            Events.PayPlayer:FireServer(unpack(args))
+            local args = {[1] = "\48\7\t\21vXX@o<\14-\8\5\2\2(\17DNtn^Y@?\n\17\17/'\19\11\20:\1\11/XDNx{9\13\21\2\17\0\2\"\28\8\1\t\26" .. "SZvPJ_"}
+            game:GetService("ReplicatedStorage").Events.PayPlayer:FireServer(unpack(args))
         end)
-        WindUI:Notify({Title = "Experimental", Content = "Paquete de pago reenviado."})
     end
 })
 
@@ -295,16 +299,24 @@ CardExp:Button({
     Title = "Maxear Boost 5x (Local)",
     Callback = function()
         pcall(function()
-            -- Intentamos cambiar el valor local del boost (a veces el servidor lo lee)
             local boost = LP.DataFolder:FindFirstChild("Money5xBoost")
-            if boost then
-                boost.Value = os.time() + 999999
-                WindUI:Notify({Title = "Boost", Content = "Boost 5x activado localmente."})
-            end
+            if boost then boost.Value = os.time() + 999999 end
         end)
     end
 })
 
+CardExp:Button({
+    Title = "Desbloquear Pases (Server Spoof)",
+    Callback = function()
+        local pases = {"2xGems", "2xMoney", "2xXP", "AutoCollect", "ExtremeGrinder", "ShinyOres", "VIP"}
+        for _, v in pairs(pases) do
+            pcall(function()
+                game:GetService("ReplicatedStorage").Events.GamepassRelated.UpdateGamepassOwnership:FireServer(v, true)
+                game:GetService("ReplicatedStorage").Events.GamepassEffect:FireServer(v)
+            end)
+        end
+    end
+})
 
 -- LÓGICA DE FÁBRICA (ULTRA VELOCIDAD)
 task.spawn(function()
