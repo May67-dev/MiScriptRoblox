@@ -251,21 +251,17 @@ CardFarmF:Toggle({ Title = "Auto-Cobrar (Oficial)", Callback = function(s) AutoC
 CardFarmF:Toggle({ Title = "Auto-Comprar (Anti-Robux)", Callback = function(s) AutoBuyF = s end })
 CardFarmF:Toggle({ Title = "Auto-Rebirth Inteligente", Callback = function(s) AutoRebirthF = s end })
 
--- LÓGICA DE FÁBRICA (LIMPIA)
+-- LÓGICA DE FÁBRICA (ULTRA VELOCIDAD)
 task.spawn(function()
     local Events = game:GetService("ReplicatedStorage"):WaitForChild("Events")
     while true do
         local tycoon = LP:FindFirstChild("TycoonOwned") and LP.TycoonOwned.Value
         
-        -- Auto Cobrar
+        -- Auto Cobrar y Auto Comprar (0.5s es suficiente)
         if AutoCollectF and tycoon then
-            pcall(function() 
-                local collectPart = tycoon:FindFirstChild("Build") and tycoon.Build:FindFirstChild("Collect")
-                if collectPart then Events.CollectMoney:FireServer(collectPart) end
-            end)
+            pcall(function() Events.CollectMoney:FireServer(tycoon.Build.Collect) end)
         end
         
-        -- Auto Comprar
         if AutoBuyF and tycoon then
             pcall(function()
                 for _, v in pairs(tycoon:GetDescendants()) do
@@ -279,15 +275,25 @@ task.spawn(function()
                 end
             end)
         end
-        
-        -- Auto Rebirth (El glitch)
-        if AutoRebirthF and tycoon then
-            pcall(function()
-                local args = { [1] = 653, [2] = 653, [3] = tycoon }
-                Events.RequestRebirth:FireServer(unpack(args))
-            end)
+        task.wait(0.5)
+    end
+end)
+
+-- BUCLE INDEPENDIENTE: REBIRTH AGRESIVO
+task.spawn(function()
+    local Events = game:GetService("ReplicatedStorage"):WaitForChild("Events")
+    while true do
+        if AutoRebirthF then
+            local tycoon = LP:FindFirstChild("TycoonOwned") and LP.TycoonOwned.Value
+            if tycoon then
+                pcall(function()
+                    -- Fuego rápido (cada 0.1s) para entrar en el primer milisegundo disponible
+                    local args = { [1] = 653, [2] = 653, [3] = tycoon }
+                    Events.RequestRebirth:FireServer(unpack(args))
+                end)
+            end
         end
-        task.wait(0.8)
+        task.wait(0.1) -- Intenta renacer 10 veces por segundo
     end
 end)
 
