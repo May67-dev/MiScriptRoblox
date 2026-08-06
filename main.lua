@@ -220,7 +220,7 @@ MM2Combat:Toggle({
 })
 
 -- ==========================================
--- 6. PESTAÑA: FACTORY TYCOON (GOD MODE ACTUALIZADO)
+-- 5. PESTAÑA: JUEGOS (FACTORY TYCOON)
 -- ==========================================
 local FactoryTab = SeccionJuegos:Tab({
     Title = "Factory Tycoon",
@@ -230,9 +230,7 @@ local FactoryTab = SeccionJuegos:Tab({
 local AutoCollectF = false
 local AutoBuyF = false
 local AutoRebirthF = false
-local AutoUpgradesF = false
 
--- MONITOR DE RECURSOS
 local CardStatsF = FactoryTab:Section({ Title = "📊 ESTADO DE FÁBRICA", Box = true, BoxBorder = true })
 local MoneyLabelF = CardStatsF:Section({ Title = "💵 Efectivo: $0" })
 local GemsLabelF = CardStatsF:Section({ Title = "💎 Gemas: 0" })
@@ -248,21 +246,18 @@ task.spawn(function()
     end
 end)
 
--- AUTOMATIZACIÓN
 local CardFarmF = FactoryTab:Section({ Title = "🤖 AUTOMATIZACIÓN", Box = true, BoxBorder = true })
 CardFarmF:Toggle({ Title = "Auto-Cobrar (Oficial)", Callback = function(s) AutoCollectF = s end })
 CardFarmF:Toggle({ Title = "Auto-Comprar (Anti-Robux)", Callback = function(s) AutoBuyF = s end })
 CardFarmF:Toggle({ Title = "Auto-Rebirth Inteligente", Callback = function(s) AutoRebirthF = s end })
-CardFarmF:Toggle({ Title = "Auto-Mejoras Gemas", Callback = function(s) AutoUpgradesF = s end })
 
--- LÓGICA DE FÁBRICA (INGENIERÍA INVERSA + ANTI-SPAM)
+-- LÓGICA DE FÁBRICA (LIMPIA)
 task.spawn(function()
     local Events = game:GetService("ReplicatedStorage"):WaitForChild("Events")
-    
     while true do
         local tycoon = LP:FindFirstChild("TycoonOwned") and LP.TycoonOwned.Value
         
-        -- 1. Auto Collect (Dinero)
+        -- Auto Cobrar
         if AutoCollectF and tycoon then
             pcall(function() 
                 local collectPart = tycoon:FindFirstChild("Build") and tycoon.Build:FindFirstChild("Collect")
@@ -270,7 +265,7 @@ task.spawn(function()
             end)
         end
         
-        -- 2. Auto Buy (Botones)
+        -- Auto Comprar
         if AutoBuyF and tycoon then
             pcall(function()
                 for _, v in pairs(tycoon:GetDescendants()) do
@@ -285,48 +280,14 @@ task.spawn(function()
             end)
         end
         
-        -- 3. Auto Rebirth
+        -- Auto Rebirth (El glitch)
         if AutoRebirthF and tycoon then
             pcall(function()
-                local args = { [1] = 184, [2] = 184, [3] = tycoon }
+                local args = { [1] = 653, [2] = 653, [3] = tycoon }
                 Events.RequestRebirth:FireServer(unpack(args))
             end)
         end
-        
-        task.wait(0.8) -- Paquete principal rápido para collect y buy
-    end
-end)
-
--- BUCLE SEPARADO PARA UPGRADES (MUCHO MÁS LENTO PARA EVITAR BUGS)
-task.spawn(function()
-    local Events = game:GetService("ReplicatedStorage"):WaitForChild("Events")
-    
-    while true do
-        if AutoUpgradesF then
-            pcall(function()
-                local Phonebook = require(game.ReplicatedStorage:WaitForChild("UpgradePhonebook"))
-                local RobuxNodes = Phonebook.RobuxPricedNodes
-                local list = {"CoinMultiplier", "GemChance", "DoubleCoinChance", "DoubleGemChance", "ConveyorSpeed", "AutoCollectChance", "ShinyValue", "UpgraderMulti", "OreLimit"}
-                
-                for _, n in pairs(list) do
-                    local nodeId = Phonebook.getNodeId(n)
-                    local isRobux = false
-                    
-                    for robuxNode, _ in pairs(RobuxNodes) do
-                        if robuxNode == (nodeId .. "1") then
-                            isRobux = true
-                            break
-                        end
-                    end
-                    
-                    if not isRobux then
-                        Events.UpgradesRelated.BuyUpgrade:FireServer(n, 1)
-                        task.wait(0.5) -- Pequeña pausa entre cada mejora para no saturar
-                    end
-                end
-            end)
-        end
-        task.wait(10) -- ¡Solo revisa y compra mejoras cada 10 segundos en lugar de cada segundo!
+        task.wait(0.8)
     end
 end)
 
