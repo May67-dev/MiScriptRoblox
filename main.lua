@@ -507,25 +507,30 @@ task.spawn(function()
     end
 end)
 -- ==========================================
--- PESTAÑA: THE STRONGER LIFTER (FIXED)
+-- PESTAÑA: THE STRONGER LIFTER (ULTRA FIX)
 -- ==========================================
 local TSLTab = SeccionJuegos:Tab({ Title = "Stronger Lifter", Icon = "solar:dumbbells-bold" })
 local AutoTSLLift, AutoTSLSell, AutoTSLBuy, AutoTSLStage = false, false, false, false
 
--- MONITOR DE FUERZA (SISTEMA DE DETECCIÓN AUTOMÁTICA)
+-- MONITOR DE FUERZA (DETECCIÓN AGRESIVA)
 local TSLStats = TSLTab:Section({ Title = "💪 ESTADO FÍSICO", Box = true, BoxBorder = true })
-local TSLMuscleLabel = TSLStats:Section({ Title = "💪 Músculo: Cargando..." })
-local TSLStageLabel = TSLStats:Section({ Title = "🆙 Etapa: Cargando..." })
-local TSLCoinsLabel = TSLStats:Section({ Title = "💰 Monedas: Cargando..." })
+local TSLMuscleLabel = TSLStats:Section({ Title = "💪 Músculo: 0" })
+local TSLStageLabel = TSLStats:Section({ Title = "🆙 Etapa: 0" })
+local TSLCoinsLabel = TSLStats:Section({ Title = "💰 Monedas: 0" })
 
 task.spawn(function()
     while true do
         pcall(function()
-            -- Buscamos los valores en leaderstats o en el objeto Player directamente
-            local muscle = LP.leaderstats:FindFirstChild("Muscle") and LP.leaderstats.Muscle.Value or 0
-            local stage = LP.leaderstats:FindFirstChild("Stage") and LP.leaderstats.Stage.Value or 0
-            -- Las monedas suelen estar ocultas o en leaderstats. Probamos ambas:
-            local coins = LP:FindFirstChild("Coins") and LP.Coins.Value or (LP.leaderstats:FindFirstChild("Coins") and LP.leaderstats.Coins.Value or 0)
+            -- Buscamos en leaderstats (Muscle, Stage, Coins)
+            local ls = LP:FindFirstChild("leaderstats")
+            local muscle = ls and ls:FindFirstChild("Muscle") and ls.Muscle.Value or 0
+            local stage = ls and ls:FindFirstChild("Stage") and ls.Stage.Value or 0
+            local coins = ls and ls:FindFirstChild("Coins") and ls.Coins.Value or 0
+            
+            -- Si no están en leaderstats, buscamos en DataFolder (común en TSL)
+            if muscle == 0 and LP:FindFirstChild("DataFolder") then
+                muscle = LP.DataFolder:FindFirstChild("Muscle") and LP.DataFolder.Muscle.Value or 0
+            end
             
             TSLMuscleLabel:SetTitle("💪 Músculo: " .. muscle)
             TSLStageLabel:SetTitle("🆙 Etapa: " .. stage)
@@ -537,24 +542,28 @@ end)
 
 -- AUTOMATIZACIÓN
 local TSLFarm = TSLTab:Section({ Title = "🤖 ENTRENAMIENTO AUTO", Box = true, BoxBorder = true })
-TSLFarm:Toggle({ Title = "Auto-Levantar (Lift)", Callback = function(s) AutoTSLLift = s end })
+TSLFarm:Toggle({ Title = "Auto-Levantar (Loop Infinito)", Callback = function(s) AutoTSLLift = s end })
 TSLFarm:Toggle({ Title = "Auto-Vender (Sell)", Callback = function(s) AutoTSLSell = s end })
 TSLFarm:Toggle({ Title = "Auto-Comprar Pesas", Callback = function(s) AutoTSLBuy = s end })
 TSLFarm:Toggle({ Title = "Auto-Etapa (Stage)", Callback = function(s) AutoTSLStage = s end })
 
--- LÓGICA DE EJECUCIÓN TSL (SISTEMA DE PAQUETES)
+-- LÓGICA DE EJECUCIÓN TSL (CICLO DE REPETICIÓN)
 task.spawn(function()
     local Remotes = require(game:GetService("ReplicatedStorage").Shared.Remotes)
     local Weights = {"Stick", "Mouse", "Water", "Soccer Ball", "Bottle", "Textbook", "Bucket", "Wood", "Guitar", "Dumbbell", "Chair", "Cart", "TV", "Bicycle", "Desk", "Bed", "Log", "Canoe", "Tyre", "Refrigerator", "Drum", "Hydrant", "Piano", "Motorcycle", "Safe", "Flag", "ATM", "RX-7", "EVO", "G-Class", "Van", "Tree", "Container", "Sailboat", "Bus", "Truck"}
     
     while true do
-        -- 1. Auto Lift (Con activación de estado)
+        -- 1. Auto Lift (Ciclo de Repetición Real)
         if AutoTSLLift then
             pcall(function() 
-                -- Le decimos al servidor que estamos listos para levantar
+                -- 1. Decimos que vamos a empezar
                 Remotes.Lifting.LiftingStatus:Fire(true)
-                -- Enviamos la petición de levantamiento
-                Remotes.Lifting.LiftRequest:Fire() 
+                task.wait(0.05)
+                -- 2. Pedimos el levantamiento
+                Remotes.Lifting.LiftRequest:Fire()
+                task.wait(0.05)
+                -- 3. Cerramos la repetición para que el servidor nos deje hacer otra
+                Remotes.Lifting.LiftingStatus:Fire(false)
             end)
         end
         
@@ -577,7 +586,7 @@ task.spawn(function()
             pcall(function() Remotes.Bloodline.UpgradeRequest:Fire() end)
         end
         
-        task.wait(0.2) -- Más rápido para aprovechar el LiftingStatus
+        task.wait(0.1) -- Delay mínimo para no ser detectado pero ser el más rápido
     end
 end)
 
