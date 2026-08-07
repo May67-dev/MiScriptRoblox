@@ -444,6 +444,68 @@ CardAdmin:Button({
         end)
     end
 })
+-- ==========================================
+-- PESTAÑA: HACK A BUSINESS (NEW!)
+-- ==========================================
+local HABTab = SeccionJuegos:Tab({ Title = "Hack Business", Icon = "solar:cup-bold" })
+local AutoHABCollect, AutoHABDeposit, AutoHABBuy, AutoHABRob = false, false, false, false
+
+-- MONITOR DE RECURSOS
+local HABStats = HABTab:Section({ Title = "📊 ESTADO DE NEGOCIO", Box = true, BoxBorder = true })
+local HABMoneyLabel = HABStats:Section({ Title = "💵 Dinero: $0" })
+local HABFilesLabel = HABStats:Section({ Title = "💾 Archivos: 0" })
+
+task.spawn(function()
+    while true do
+        pcall(function()
+            local ls = LP:WaitForChild("leaderstats")
+            HABMoneyLabel:SetTitle("💵 Dinero: $" .. ls.Money.Value)
+            HABFilesLabel:SetTitle("💾 Archivos: " .. ls.Files.Value)
+        end)
+        task.wait(1)
+    end
+end)
+
+-- AUTOMATIZACIÓN
+local HABFarm = HABTab:Section({ Title = "🤖 AUTO-HACKER", Box = true, BoxBorder = true })
+HABFarm:Toggle({ Title = "Auto-Collect (Money)", Callback = function(s) AutoHABCollect = s end })
+HABFarm:Toggle({ Title = "Auto-Deposit (Files)", Callback = function(s) AutoHABDeposit = s end })
+HABFarm:Toggle({ Title = "Auto-Buy Business", Callback = function(s) AutoHABBuy = s end })
+HABFarm:Toggle({ Title = "Auto-Rob Files", Callback = function(s) AutoHABRob = s end })
+
+-- LÓGICA DE EJECUCIÓN HACK A BUSINESS
+task.spawn(function()
+    local Events = game:GetService("ReplicatedStorage"):WaitForChild("Events"):WaitForChild("ToServer")
+    
+    while true do
+        if AutoHABCollect then pcall(function() Events.Collect:FireServer() end) end
+        if AutoHABDeposit then pcall(function() Events.Deposit:FireServer() end) end
+        
+        if AutoHABRob then
+            pcall(function()
+                -- Intentamos iniciar el robo automáticamente
+                Events.RobSecondaryCurrency:FireServer("start")
+                task.wait(0.1)
+                Events.RobSecondaryCurrency:FireServer("end")
+            end)
+        end
+        
+        if AutoHABBuy then
+            pcall(function()
+                -- Buscamos objetos disponibles en la tienda (UIDs tipo D001, F001)
+                -- Nota: Esta lógica se puede perfeccionar con la lista de objetos que enviaste
+                for i = 1, 50 do
+                    local uidD = string.format("D%03d", i)
+                    local uidF = string.format("F%03d", i)
+                    Events.BuyObject:FireServer(uidD)
+                    Events.BuyObject:FireServer(uidF)
+                end
+            end)
+        end
+        
+        task.wait(0.5)
+    end
+end)
 
 -- ==========================================
 -- 7. PESTAÑA: AJUSTES (SISTEMA)
