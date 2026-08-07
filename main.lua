@@ -506,6 +506,70 @@ task.spawn(function()
         task.wait(0.5)
     end
 end)
+-- ==========================================
+-- PESTAÑA: THE STRONGER LIFTER (NEW!)
+-- ==========================================
+local TSLTab = SeccionJuegos:Tab({ Title = "Stronger Lifter", Icon = "solar: dumbbells-bold" })
+local AutoTSLLift, AutoTSLSell, AutoTSLBuy, AutoTSLStage = false, false, false, false
+
+-- MONITOR DE FUERZA
+local TSLStats = TSLTab:Section({ Title = "💪 ESTADO FÍSICO", Box = true, BoxBorder = true })
+local TSLMuscleLabel = TSLStats:Section({ Title = "💪 Músculo: 0" })
+local TSLStageLabel = TSLStats:Section({ Title = "🆙 Etapa: 0" })
+local TSLCoinsLabel = TSLStats:Section({ Title = "💰 Monedas: 0" })
+
+task.spawn(function()
+    while true do
+        pcall(function()
+            local ls = LP:WaitForChild("leaderstats")
+            TSLMuscleLabel:SetTitle("💪 Músculo: " .. ls.Muscle.Value)
+            TSLStageLabel:SetTitle("🆙 Etapa: " .. ls.Stage.Value)
+            TSLCoinsLabel:SetTitle("💰 Monedas: " .. ls.Coins.Value)
+        end)
+        task.wait(1)
+    end
+end)
+
+-- AUTOMATIZACIÓN
+local TSLFarm = TSLTab:Section({ Title = "🤖 ENTRENAMIENTO AUTO", Box = true, BoxBorder = true })
+TSLFarm:Toggle({ Title = "Auto-Levantar (Lift)", Callback = function(s) AutoTSLLift = s end })
+TSLFarm:Toggle({ Title = "Auto-Vender (Sell)", Callback = function(s) AutoTSLSell = s end })
+TSLFarm:Toggle({ Title = "Auto-Comprar Pesas", Callback = function(s) AutoTSLBuy = s end })
+TSLFarm:Toggle({ Title = "Auto-Etapa (Stage)", Callback = function(s) AutoTSLStage = s end })
+
+-- LÓGICA DE EJECUCIÓN TSL
+task.spawn(function()
+    local Remotes = require(game:GetService("ReplicatedStorage").Shared.Remotes)
+    local Weights = {"Stick", "Mouse", "Water", "Soccer Ball", "Bottle", "Textbook", "Bucket", "Wood", "Guitar", "Dumbbell", "Chair", "Cart", "TV", "Bicycle", "Desk", "Bed", "Log", "Canoe", "Tyre", "Refrigerator", "Drum", "Hydrant", "Piano", "Motorcycle", "Safe", "Flag", "ATM", "RX-7", "EVO", "G-Class", "Van", "Tree", "Container", "Sailboat", "Bus", "Truck"}
+    
+    while true do
+        -- 1. Auto Lift
+        if AutoTSLLift then
+            pcall(function() Remotes.Lifting.LiftRequest:Fire() end)
+        end
+        
+        -- 2. Auto Sell
+        if AutoTSLSell then
+            pcall(function() Remotes.ClientRequests.SellMuscle:Fire() end)
+        end
+        
+        -- 3. Auto Buy Weights
+        if AutoTSLBuy then
+            pcall(function()
+                for _, weightName in pairs(Weights) do
+                    Remotes.Shops.BuyItem:Fire(weightName, "Weights")
+                end
+            end)
+        end
+        
+        -- 4. Auto Stage
+        if AutoTSLStage then
+            pcall(function() Remotes.Bloodline.UpgradeRequest:Fire() end)
+        end
+        
+        task.wait(0.3) -- Velocidad de entrenamiento balanceada
+    end
+end)
 
 -- ==========================================
 -- 7. PESTAÑA: AJUSTES (SISTEMA)
