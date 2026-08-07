@@ -405,44 +405,7 @@ CardStats:Button({
     end
 })
 
--- ==========================================
--- PESTAÑA: GOD MODE (EXPLOITS CRÍTICOS)
--- ==========================================
-local GodTab = SeccionGod:Tab({ Title = "Exploits", Icon = "solar:danger-bold" })
 
-local CardLevels = GodTab:Section({ Title = "📈 NIVELES Y GEMAS", Box = true, BoxBorder = true })
-CardLevels:Button({
-    Title = "Inyectar +10 Niveles (Gemas)",
-    Callback = function()
-        pcall(function()
-            for i = 1, 10 do
-                game:GetService("ReplicatedStorage").Events.UpdateNormalData:FireServer("Increment", LP, LP.leaderstats.Level, 1)
-                task.wait(0.1)
-            end
-        end)
-    end
-})
-
-CardLevels:Button({
-    Title = "Forzar Max XP",
-    Callback = function()
-        pcall(function()
-            game:GetService("ReplicatedStorage").Events.UpdateNormalData:FireServer("Increment", LP, LP.DataFolder.totalXp, 9999999)
-        end)
-    end
-})
-
-local CardAdmin = GodTab:Section({ Title = "🛡️ ADMIN SPOOF", Box = true, BoxBorder = true })
-CardAdmin:Button({
-    Title = "Spoof Admin Whitelist",
-    Callback = function()
-        pcall(function()
-            local val = Instance.new("IntValue", game.ReplicatedStorage.GameSettings.AdminWhitelist)
-            val.Name = "AdminID"; val.Value = LP.UserId
-            WindUI:Notify({ Title = "Admin", Content = "ID inyectada." })
-        end)
-    end
-})
 -- ==========================================
 -- PESTAÑA: HACK A BUSINESS (NEW!)
 -- ==========================================
