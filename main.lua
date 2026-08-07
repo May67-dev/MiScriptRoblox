@@ -507,24 +507,29 @@ task.spawn(function()
     end
 end)
 -- ==========================================
--- PESTAÑA: THE STRONGER LIFTER (NEW!)
+-- PESTAÑA: THE STRONGER LIFTER (FIXED)
 -- ==========================================
-local TSLTab = SeccionJuegos:Tab({ Title = "Stronger Lifter", Icon = "solar: dumbbells-bold" })
+local TSLTab = SeccionJuegos:Tab({ Title = "Stronger Lifter", Icon = "solar:dumbbells-bold" })
 local AutoTSLLift, AutoTSLSell, AutoTSLBuy, AutoTSLStage = false, false, false, false
 
--- MONITOR DE FUERZA
+-- MONITOR DE FUERZA (SISTEMA DE DETECCIÓN AUTOMÁTICA)
 local TSLStats = TSLTab:Section({ Title = "💪 ESTADO FÍSICO", Box = true, BoxBorder = true })
-local TSLMuscleLabel = TSLStats:Section({ Title = "💪 Músculo: 0" })
-local TSLStageLabel = TSLStats:Section({ Title = "🆙 Etapa: 0" })
-local TSLCoinsLabel = TSLStats:Section({ Title = "💰 Monedas: 0" })
+local TSLMuscleLabel = TSLStats:Section({ Title = "💪 Músculo: Cargando..." })
+local TSLStageLabel = TSLStats:Section({ Title = "🆙 Etapa: Cargando..." })
+local TSLCoinsLabel = TSLStats:Section({ Title = "💰 Monedas: Cargando..." })
 
 task.spawn(function()
     while true do
         pcall(function()
-            local ls = LP:WaitForChild("leaderstats")
-            TSLMuscleLabel:SetTitle("💪 Músculo: " .. ls.Muscle.Value)
-            TSLStageLabel:SetTitle("🆙 Etapa: " .. ls.Stage.Value)
-            TSLCoinsLabel:SetTitle("💰 Monedas: " .. ls.Coins.Value)
+            -- Buscamos los valores en leaderstats o en el objeto Player directamente
+            local muscle = LP.leaderstats:FindFirstChild("Muscle") and LP.leaderstats.Muscle.Value or 0
+            local stage = LP.leaderstats:FindFirstChild("Stage") and LP.leaderstats.Stage.Value or 0
+            -- Las monedas suelen estar ocultas o en leaderstats. Probamos ambas:
+            local coins = LP:FindFirstChild("Coins") and LP.Coins.Value or (LP.leaderstats:FindFirstChild("Coins") and LP.leaderstats.Coins.Value or 0)
+            
+            TSLMuscleLabel:SetTitle("💪 Músculo: " .. muscle)
+            TSLStageLabel:SetTitle("🆙 Etapa: " .. stage)
+            TSLCoinsLabel:SetTitle("💰 Monedas: " .. coins)
         end)
         task.wait(1)
     end
@@ -537,15 +542,20 @@ TSLFarm:Toggle({ Title = "Auto-Vender (Sell)", Callback = function(s) AutoTSLSel
 TSLFarm:Toggle({ Title = "Auto-Comprar Pesas", Callback = function(s) AutoTSLBuy = s end })
 TSLFarm:Toggle({ Title = "Auto-Etapa (Stage)", Callback = function(s) AutoTSLStage = s end })
 
--- LÓGICA DE EJECUCIÓN TSL
+-- LÓGICA DE EJECUCIÓN TSL (SISTEMA DE PAQUETES)
 task.spawn(function()
     local Remotes = require(game:GetService("ReplicatedStorage").Shared.Remotes)
     local Weights = {"Stick", "Mouse", "Water", "Soccer Ball", "Bottle", "Textbook", "Bucket", "Wood", "Guitar", "Dumbbell", "Chair", "Cart", "TV", "Bicycle", "Desk", "Bed", "Log", "Canoe", "Tyre", "Refrigerator", "Drum", "Hydrant", "Piano", "Motorcycle", "Safe", "Flag", "ATM", "RX-7", "EVO", "G-Class", "Van", "Tree", "Container", "Sailboat", "Bus", "Truck"}
     
     while true do
-        -- 1. Auto Lift
+        -- 1. Auto Lift (Con activación de estado)
         if AutoTSLLift then
-            pcall(function() Remotes.Lifting.LiftRequest:Fire() end)
+            pcall(function() 
+                -- Le decimos al servidor que estamos listos para levantar
+                Remotes.Lifting.LiftingStatus:Fire(true)
+                -- Enviamos la petición de levantamiento
+                Remotes.Lifting.LiftRequest:Fire() 
+            end)
         end
         
         -- 2. Auto Sell
@@ -567,7 +577,7 @@ task.spawn(function()
             pcall(function() Remotes.Bloodline.UpgradeRequest:Fire() end)
         end
         
-        task.wait(0.3) -- Velocidad de entrenamiento balanceada
+        task.wait(0.2) -- Más rápido para aprovechar el LiftingStatus
     end
 end)
 
