@@ -507,86 +507,75 @@ task.spawn(function()
     end
 end)
 -- ==========================================
--- PESTAÑA: THE STRONGER LIFTER (ULTRA FIX)
+-- PESTAÑA: THE STRONGER LIFTER (UI)
 -- ==========================================
 local TSLTab = SeccionJuegos:Tab({ Title = "Stronger Lifter", Icon = "solar:dumbbells-bold" })
 local AutoTSLLift, AutoTSLSell, AutoTSLBuy, AutoTSLStage = false, false, false, false
 
--- MONITOR DE FUERZA (DETECCIÓN AGRESIVA)
 local TSLStats = TSLTab:Section({ Title = "💪 ESTADO FÍSICO", Box = true, BoxBorder = true })
 local TSLMuscleLabel = TSLStats:Section({ Title = "💪 Músculo: 0" })
 local TSLStageLabel = TSLStats:Section({ Title = "🆙 Etapa: 0" })
 local TSLCoinsLabel = TSLStats:Section({ Title = "💰 Monedas: 0" })
 
-task.spawn(function()
-    while true do
-        pcall(function()
-            -- Buscamos en leaderstats (Muscle, Stage, Coins)
-            local ls = LP:FindFirstChild("leaderstats")
-            local muscle = ls and ls:FindFirstChild("Muscle") and ls.Muscle.Value or 0
-            local stage = ls and ls:FindFirstChild("Stage") and ls.Stage.Value or 0
-            local coins = ls and ls:FindFirstChild("Coins") and ls.Coins.Value or 0
-            
-            -- Si no están en leaderstats, buscamos en DataFolder (común en TSL)
-            if muscle == 0 and LP:FindFirstChild("DataFolder") then
-                muscle = LP.DataFolder:FindFirstChild("Muscle") and LP.DataFolder.Muscle.Value or 0
-            end
-            
-            TSLMuscleLabel:SetTitle("💪 Músculo: " .. muscle)
-            TSLStageLabel:SetTitle("🆙 Etapa: " .. stage)
-            TSLCoinsLabel:SetTitle("💰 Monedas: " .. coins)
-        end)
-        task.wait(1)
-    end
-end)
-
--- AUTOMATIZACIÓN
 local TSLFarm = TSLTab:Section({ Title = "🤖 ENTRENAMIENTO AUTO", Box = true, BoxBorder = true })
-TSLFarm:Toggle({ Title = "Auto-Levantar (Loop Infinito)", Callback = function(s) AutoTSLLift = s end })
+TSLFarm:Toggle({ Title = "Auto-Levantar (Loop)", Callback = function(s) AutoTSLLift = s end })
 TSLFarm:Toggle({ Title = "Auto-Vender (Sell)", Callback = function(s) AutoTSLSell = s end })
 TSLFarm:Toggle({ Title = "Auto-Comprar Pesas", Callback = function(s) AutoTSLBuy = s end })
 TSLFarm:Toggle({ Title = "Auto-Etapa (Stage)", Callback = function(s) AutoTSLStage = s end })
 
--- LÓGICA DE EJECUCIÓN TSL (CICLO DE REPETICIÓN)
+-- ==========================================
+-- MOTOR: THE STRONGER LIFTER (LOGIC)
+-- ==========================================
 task.spawn(function()
-    local Remotes = require(game:GetService("ReplicatedStorage").Shared.Remotes)
-    local Weights = {"Stick", "Mouse", "Water", "Soccer Ball", "Bottle", "Textbook", "Bucket", "Wood", "Guitar", "Dumbbell", "Chair", "Cart", "TV", "Bicycle", "Desk", "Bed", "Log", "Canoe", "Tyre", "Refrigerator", "Drum", "Hydrant", "Piano", "Motorcycle", "Safe", "Flag", "ATM", "RX-7", "EVO", "G-Class", "Van", "Tree", "Container", "Sailboat", "Bus", "Truck"}
+    -- 🛡️ FILTRO ANTI-ERRORES: Solo corre si detecta que es TSL
+    local Shared = game:GetService("ReplicatedStorage"):FindFirstChild("Shared")
+    if not Shared or not Shared:FindFirstChild("Remotes") then return end
     
+    local Remotes = require(Shared.Remotes)
+    local lastLiftState = false
+
     while true do
-        -- 1. Auto Lift (Ciclo de Repetición Real)
-        if AutoTSLLift then
-            pcall(function() 
-                -- 1. Decimos que vamos a empezar
-                Remotes.Lifting.LiftingStatus:Fire(true)
-                task.wait(0.05)
-                -- 2. Pedimos el levantamiento
-                Remotes.Lifting.LiftRequest:Fire()
-                task.wait(0.05)
-                -- 3. Cerramos la repetición para que el servidor nos deje hacer otra
-                Remotes.Lifting.LiftingStatus:Fire(false)
-            end)
-        end
-        
-        -- 2. Auto Sell
-        if AutoTSLSell then
-            pcall(function() Remotes.ClientRequests.SellMuscle:Fire() end)
-        end
-        
-        -- 3. Auto Buy Weights
-        if AutoTSLBuy then
-            pcall(function()
-                for _, weightName in pairs(Weights) do
-                    Remotes.Shops.BuyItem:Fire(weightName, "Weights")
+        pcall(function()
+            -- 1. Monitor de Estadísticas
+            local ls = LP:FindFirstChild("leaderstats")
+            if ls then
+                TSLMuscleLabel:SetTitle("💪 Músculo: " .. (ls:FindFirstChild("Muscle") and ls.Muscle.Value or 0))
+                TSLStageLabel:SetTitle("🆙 Etapa: " .. (ls:FindFirstChild("Stage") and ls.Stage.Value or 0))
+                -- En TSL las monedas pueden ser 'Coins' o 'Fame'
+                local c = ls:FindFirstChild("Coins") or ls:FindFirstChild("Fame")
+                TSLCoinsLabel:SetTitle("💰 Monedas: " .. (c and c.Value or 0))
+            end
+
+            -- 2. Lógica de Auto-Levantar (Loop Infinito Corregido)
+            if AutoTSLLift then
+                -- Si no estábamos en modo entrenamiento, lo activamos una vez
+                if not lastLiftState then
+                    Remotes.Lifting.LiftingStatus:Fire(true)
+                    lastLiftState = true
                 end
-            end)
-        end
-        
-        -- 4. Auto Stage
-        if AutoTSLStage then
-            pcall(function() Remotes.Bloodline.UpgradeRequest:Fire() end)
-        end
-        
-        task.wait(0.1) -- Delay mínimo para no ser detectado pero ser el más rápido
+                -- Enviamos la petición de levantamiento (Spam)
+                Remotes.Lifting.LiftRequest:Fire()
+            else
+                -- Si apagamos el toggle, desactivamos el modo entrenamiento
+                if lastLiftState then
+                    Remotes.Lifting.LiftingStatus:Fire(false)
+                    lastLiftState = false
+                end
+            end
+
+            -- 3. Auto Vender
+            if AutoTSLSell then Remotes.ClientRequests.SellMuscle:Fire() end
+
+            -- 4. Auto Etapa (Stage)
+            if AutoTSLStage then Remotes.Bloodline.UpgradeRequest:Fire() end
+
+            -- 5. Auto Comprar Pesas
+            if AutoTSLBuy then
+                local W = {"Stick", "Mouse", "Water", "Soccer Ball", "Bottle", "Textbook", "Bucket", "Wood", "Guitar", "Dumbbell", "Chair", "Cart", "TV", "Bicycle", "Desk", "Bed", "Log", "Canoe", "Tyre", "Refrigerator", "Drum", "Hydrant", "Piano", "Motorcycle", "Safe", "Flag", "ATM", "RX-7", "EVO", "G-Class", "Van", "Tree", "Container", "Sailboat", "Bus", "Truck"}
+                for _, weight in pairs(W) do Remotes.Shops.BuyItem:Fire(weight, "Weights") end
+            end
+        end)
+        task.wait(0.1) -- Velocidad máxima permitida por el servidor
     end
 end)
 
