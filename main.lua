@@ -546,21 +546,21 @@ task.spawn(function()
                 TSLCoinsLabel:SetTitle("💰 Monedas: " .. (c and c.Value or 0))
             end
 
-            -- 2. Lógica de Auto-Levantar (Loop Infinito Corregido)
+            -- 2. Lógica de Auto-Levantar (Loop Infinito REAL)
             if AutoTSLLift then
-                -- Si no estábamos en modo entrenamiento, lo activamos una vez
-                if not lastLiftState then
+                pcall(function()
+                    -- 1. Decimos que vamos a subir la pesa
                     Remotes.Lifting.LiftingStatus:Fire(true)
-                    lastLiftState = true
-                end
-                -- Enviamos la petición de levantamiento (Spam)
-                Remotes.Lifting.LiftRequest:Fire()
-            else
-                -- Si apagamos el toggle, desactivamos el modo entrenamiento
-                if lastLiftState then
+                    task.wait(0.05)
+                    
+                    -- 2. Hacemos el levantamiento
+                    Remotes.Lifting.LiftRequest:Fire()
+                    task.wait(0.05)
+                    
+                    -- 3. ¡ESTO ES LO QUE FALTABA! 
+                    -- Decimos que ya bajamos la pesa para que el servidor nos deje hacer otra
                     Remotes.Lifting.LiftingStatus:Fire(false)
-                    lastLiftState = false
-                end
+                end)
             end
 
             -- 3. Auto Vender
