@@ -22,7 +22,6 @@ local Window = WindUI:CreateWindow({
 -- 2. SECCIONES DEL SIDEBAR
 local SeccionHome = Window:Section({ Title = "HOME" })
 local SeccionTrampas = Window:Section({ Title = "TRAMPAS" })
-local SeccionJuegos = Window:Section({ Title = "JUEGOS" })
 local SeccionSistema = Window:Section({ Title = "SISTEMA" })
 
 -- ==========================================
