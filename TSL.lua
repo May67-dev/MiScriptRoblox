@@ -67,21 +67,29 @@ task.spawn(function()
                 CoinsLabel:SetTitle("💰 Monedas: " .. (ls:FindFirstChild("Coins") and ls.Coins.Value or 0))
             end
 
-            -- Lógica de Auto-Levantar (CON BYPASS DE ESFUERZO)
+            -- 2. Lógica de Auto-Levantar (SIMULACIÓN HUMANA)
             if AutoLift then
-                -- 1. Iniciamos el levantamiento
-                Remotes.Lifting.LiftingStatus:Fire(true)
-                
-                -- 2. ESPERAMOS EL "STRUGGLE" (Este delay es la clave)
-                -- Si la pesa es difícil, el servidor necesita este tiempo
-                task.wait(0.15) 
-                
-                -- 3. Enviamos la petición de músculo
-                Remotes.Lifting.LiftRequest:Fire()
-                
-                -- 4. Terminamos la repetición
-                task.wait(0.05)
-                Remotes.Lifting.LiftingStatus:Fire(false)
+                pcall(function()
+                    -- 1. Iniciamos el levantamiento
+                    Remotes.Lifting.LiftingStatus:Fire(true)
+                    
+                    -- 2. SIMULACIÓN DE ESFUERZO DINÁMICO
+                    -- Si te cuesta levantarla, el servidor espera más tiempo.
+                    -- Vamos a probar con 0.5 segundos, que es un tiempo estándar de "repetición".
+                    task.wait(0.5) 
+                    
+                    -- 3. Enviamos la petición de músculo
+                    Remotes.Lifting.LiftRequest:Fire()
+                    
+                    -- 4. Mantenemos un poco más para asegurar que el servidor registre el éxito
+                    task.wait(0.1)
+                    
+                    -- 5. Terminamos la repetición (Limpieza de estado)
+                    Remotes.Lifting.LiftingStatus:Fire(false)
+                    
+                    -- 6. Pequeño descanso antes de la siguiente (Vital para que el servidor no se bloquee)
+                    task.wait(0.2)
+                end)
             end
 
             if AutoSell then Remotes.ClientRequests.SellMuscle:Fire() end
