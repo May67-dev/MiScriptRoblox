@@ -1,16 +1,15 @@
 --[[
-    NC HUB - THE STRONGER LIFTER EDITION
-    AUTOR: hidjcjgg
-    ESTILO: BENTO BOX FUTURISTA (MORADO/AZUL)
+    NC HUB - THE STRONGER LIFTER EDITION (V2.0)
+    FIX: LOOP INFINITO + STRUGGLE BYPASS
 ]]
 
 local TiempoInicio = os.time()
 local LP = game.Players.LocalPlayer
 local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
 
--- 1. CONFIGURACIÓN DE LA VENTANA
+-- 1. VENTANA
 local Window = WindUI:CreateWindow({
-    Title = "NC HUB | TSL",
+    Title = "NC HUB | TSL PRO",
     Author = "By hidjcjgg",
     Folder = "NCHUBScripts",
     Icon = "solar:dumbbell-bold",
@@ -20,83 +19,79 @@ local Window = WindUI:CreateWindow({
     Topbar = { Height = 44, ButtonsType = "Mac" }
 })
 
--- 2. SECCIONES DEL SIDEBAR (PERSONALIZADAS PARA TSL)
+-- 2. SECCIONES
 local SeccionPrincipal = Window:Section({ Title = "ENTRENAMIENTO" })
 local SeccionPersonaje = Window:Section({ Title = "JUGADOR" })
 local SeccionSistema = Window:Section({ Title = "SISTEMA" })
 
--- 3. PESTAÑA: DASHBOARD (HOME)
+-- 3. DASHBOARD (HOME)
 local HomeTab = SeccionPrincipal:Tab({ Title = "Dashboard", Icon = "solar:home-2-bold" })
-local StatsCard = HomeTab:Section({ Title = "💪 TUS ESTADÍSTICAS", Box = true })
-local MuscleLabel = StatsCard:Section({ Title = "Fuerza: 0" })
-local StageLabel = StatsCard:Section({ Title = "Etapa: 0" })
-local FameLabel = StatsCard:Section({ Title = "Fama: 0" })
-local TimeLabel = StatsCard:Section({ Title = "⏳ Sesión: 0h 0m 0s" })
+local StatsCard = HomeTab:Section({ Title = "💪 TU PROGRESO", Box = true, BoxBorder = true })
+local MuscleLabel = StatsCard:Section({ Title = "💪 Músculo: 0" })
+local StageLabel = StatsCard:Section({ Title = "🆙 Etapa: 0" })
+local CoinsLabel = StatsCard:Section({ Title = "💰 Monedas: 0" })
 
-task.spawn(function()
-    while true do
-        pcall(function()
-            local ls = LP:FindFirstChild("leaderstats")
-            if ls then
-                MuscleLabel:SetTitle("💪 Músculo: " .. (ls:FindFirstChild("Muscle") and ls.Muscle.Value or 0))
-                StageLabel:SetTitle("🆙 Etapa: " .. (ls:FindFirstChild("Stage") and ls.Stage.Value or 0))
-                FameLabel:SetTitle("⭐ Fama: " .. (ls:FindFirstChild("Fame") and ls.Fame.Value or 0))
-            end
-            local s = os.time() - TiempoInicio
-            local m, h = math.floor(s/60), math.floor(s/3600)
-            TimeLabel:SetTitle(string.format("⏳ Sesión: %dh %dm %ds", h, m%60, s%60))
-        end)
-        task.wait(1)
-    end
-end)
-
--- 4. PESTAÑA: AUTO-FARM (LA JOYITA)
-local FarmTab = SeccionPrincipal:Tab({ Title = "Auto-Farm", Icon = "solar:ghost-bold" })
+-- 4. TRAMPAS (FARM)
+local FarmTab = SeccionPrincipal:Tab({ Title = "Auto-Farm", Icon = "solar:bolt-bold" })
 local AutoLift, AutoSell, AutoBuy, AutoStage = false, false, false, false
 
-FarmTab:Toggle({ Title = "Auto-Levantar (Loop Infinito)", Callback = function(s) AutoLift = s end })
+FarmTab:Toggle({ Title = "Auto-Levantar (Struggle Bypass)", Callback = function(s) AutoLift = s end })
 FarmTab:Toggle({ Title = "Auto-Vender Músculo", Callback = function(s) AutoSell = s end })
-FarmTab:Toggle({ Title = "Auto-Subir Etapa (Stage)", Callback = function(s) AutoStage = s end })
 FarmTab:Toggle({ Title = "Auto-Comprar Pesas", Callback = function(s) AutoBuy = s end })
+FarmTab:Toggle({ Title = "Auto-Evolucionar (Stage)", Callback = function(s) AutoStage = s end })
 
--- 5. PESTAÑA: MOVIMIENTO (JUGADOR)
-local MoveTab = SeccionPersonaje:Tab({ Title = "Movimiento", Icon = "solar:walking-bold" })
-MoveTab:Slider({ Title = "Velocidad", Default = 16, Min = 16, Max = 250, Callback = function(v) LP.Character.Humanoid.WalkSpeed = v end })
-MoveTab:Slider({ Title = "Salto", Default = 50, Min = 50, Max = 300, Callback = function(v) LP.Character.Humanoid.JumpPower = v end })
+-- 5. MOVIMIENTO
+local MovTab = SeccionPersonaje:Tab({ Title = "Movimiento", Icon = "solar:walking-bold" })
+MovTab:Slider({ Title = "Velocidad", Min = 16, Max = 200, Default = 16, Callback = function(v) LP.Character.Humanoid.WalkSpeed = v end })
 
--- 6. PESTAÑA: SISTEMA
+-- 6. SISTEMA
 local SisTab = SeccionSistema:Tab({ Title = "Herramientas", Icon = "solar:settings-bold" })
 SisTab:Button({ Title = "Dark Dex", Callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))() end })
 SisTab:Button({ Title = "SimpleSpy", Callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/SimpleSpySource.lua"))() end })
 SisTab:Button({ Title = "Cerrar Hub", Callback = function() Window:Destroy() end })
 
 -- ==========================================
--- 🏁 MOTOR DE EJECUCIÓN (LÓGICA TSL)
+-- 🏁 LÓGICA MAESTRA (TSL ENGINE)
 -- ==========================================
 task.spawn(function()
     local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
-    local Remotes = require(Shared:WaitForChild("Remotes"))
+    local Remotes = require(Shared.Remotes)
     
     while true do
-        if AutoLift then
-            pcall(function()
+        pcall(function()
+            -- Monitor de Stats
+            local ls = LP:FindFirstChild("leaderstats")
+            if ls then
+                MuscleLabel:SetTitle("💪 Músculo: " .. (ls:FindFirstChild("Muscle") and ls.Muscle.Value or 0))
+                StageLabel:SetTitle("🆙 Etapa: " .. (ls:FindFirstChild("Stage") and ls.Stage.Value or 0))
+                CoinsLabel:SetTitle("💰 Monedas: " .. (ls:FindFirstChild("Coins") and ls.Coins.Value or 0))
+            end
+
+            -- Lógica de Auto-Levantar (CON BYPASS DE ESFUERZO)
+            if AutoLift then
+                -- 1. Iniciamos el levantamiento
                 Remotes.Lifting.LiftingStatus:Fire(true)
-                task.wait(0.05)
+                
+                -- 2. ESPERAMOS EL "STRUGGLE" (Este delay es la clave)
+                -- Si la pesa es difícil, el servidor necesita este tiempo
+                task.wait(0.15) 
+                
+                -- 3. Enviamos la petición de músculo
                 Remotes.Lifting.LiftRequest:Fire()
+                
+                -- 4. Terminamos la repetición
                 task.wait(0.05)
                 Remotes.Lifting.LiftingStatus:Fire(false)
-            end)
-        end
-        
-        if AutoSell then pcall(function() Remotes.ClientRequests.SellMuscle:Fire() end) end
-        if AutoStage then pcall(function() Remotes.Bloodline.UpgradeRequest:Fire() end) end
-        
-        if AutoBuy then
-            pcall(function()
+            end
+
+            if AutoSell then Remotes.ClientRequests.SellMuscle:Fire() end
+            if AutoStage then Remotes.Bloodline.UpgradeRequest:Fire() end
+            
+            if AutoBuy then
                 local W = {"Stick", "Mouse", "Water", "Soccer Ball", "Bottle", "Textbook", "Bucket", "Wood", "Guitar", "Dumbbell", "Chair", "Cart", "TV", "Bicycle", "Desk", "Bed", "Log", "Canoe", "Tyre", "Refrigerator", "Drum", "Hydrant", "Piano", "Motorcycle", "Safe", "Flag", "ATM", "RX-7", "EVO", "G-Class", "Van", "Tree", "Container", "Sailboat", "Bus", "Truck"}
-                for _, w in pairs(W) do Remotes.Shops.BuyItem:Fire(w, "Weights") end
-            end)
-        end
+                for _, weight in pairs(W) do Remotes.Shops.BuyItem:Fire(weight, "Weights") end
+            end
+        end)
         task.wait(0.1)
     end
 end)
