@@ -169,26 +169,32 @@ task.spawn(function()
     
     while true do
         pcall(function()
-            -- >>> AQUÍ ESTÁ EL CAMBIO PARA EL AUTO-LIFT <<<
-            if AutoLift then
-                -- 1. Abrimos la repetición
-                Remotes.Lifting.LiftingStatus:Fire(true)
-                task.wait(0.15) 
-                
-                -- 2. Pedimos el músculo
-                Remotes.Lifting.LiftRequest:Fire()
-                
-                -- 3. Bypass de Struggle (si existe)
-                if Remotes.Lifting:FindFirstChild("StruggleRemote") then 
-                    Remotes.Lifting.StruggleRemote:Fire() 
-                end
-                task.wait(0.1)
-                
-                -- 4. CERRAMOS la repetición (Esto libera el bloqueo)
-                Remotes.Lifting.LiftingStatus:Fire(false)
-                task.wait(0.1)
-            end
-            -- >>> FIN DEL CAMBIO <<<
+-- LÓGICA DE AUTO-LIFT (PACKET BYPASS)
+if AutoLift then
+    pcall(function()
+        local Shared = game:GetService("ReplicatedStorage").Shared
+        local PacketRemote = Shared.Remotes.Packet.RemoteEvent
+        local LiftingRemotes = require(Shared.Remotes).Lifting
+        
+        -- 1. Iniciamos el estado (Esto limpia el buffer en el servidor)
+        LiftingRemotes.LiftingStatus:Fire(true)
+        task.wait(0.1)
+        
+        -- 2. Disparamos el levantamiento
+        LiftingRemotes.LiftRequest:Fire()
+        
+        -- 3. FORZAMOS EL ENVÍO DEL PAQUETE
+        -- Como no podemos generar el buffer exacto, disparamos el evento de red
+        -- que el juego usa para "confirmar" que la acción terminó.
+        PacketRemote:FireServer() 
+        
+        task.wait(0.1)
+        
+        -- 4. Cerramos el estado
+        LiftingRemotes.LiftingStatus:Fire(false)
+        task.wait(0.1)
+    end)
+end
 
             if AutoSell then Remotes.ClientRequests.SellMuscle:Fire() end
             if AutoStage then Remotes.Bloodline.UpgradeRequest:Fire() end
