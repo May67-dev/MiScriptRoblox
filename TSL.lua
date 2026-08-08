@@ -51,55 +51,53 @@ SisTab:Button({ Title = "SimpleSpy", Callback = function() loadstring(game:HttpG
 SisTab:Button({ Title = "Cerrar Hub", Callback = function() Window:Destroy() end })
 
 -- ==========================================
--- 🏁 LÓGICA MAESTRA (TSL ENGINE)
+-- 🏁 LÓGICA MAESTRA (TSL ENGINE OPTIMIZADO)
 -- ==========================================
 task.spawn(function()
     local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
     local Remotes = require(Shared.Remotes)
     
+    -- BUCLE 1: MONITOR Y FUNCIONES SECUNDARIAS (1 seg)
+    task.spawn(function()
+        while true do
+            pcall(function()
+                local ls = LP:FindFirstChild("leaderstats")
+                if ls then
+                    MuscleLabel:SetTitle("💪 Músculo: " .. (ls:FindFirstChild("Muscle") and ls.Muscle.Value or 0))
+                    StageLabel:SetTitle("🆙 Etapa: " .. (ls:FindFirstChild("Stage") and ls.Stage.Value or 0))
+                    CoinsLabel:SetTitle("💰 Monedas: " .. (ls:FindFirstChild("Coins") and ls.Coins.Value or 0))
+                end
+                if AutoSell then Remotes.ClientRequests.SellMuscle:Fire() end
+                if AutoStage then Remotes.Bloodline.UpgradeRequest:Fire() end
+                if AutoBuy then
+                    local W = {"Stick", "Mouse", "Water", "Soccer Ball", "Bottle", "Textbook", "Bucket", "Wood", "Guitar", "Dumbbell", "Chair", "Cart", "TV", "Bicycle", "Desk", "Bed", "Log", "Canoe", "Tyre", "Refrigerator", "Drum", "Hydrant", "Piano", "Motorcycle", "Safe", "Flag", "ATM", "RX-7", "EVO", "G-Class", "Van", "Tree", "Container", "Sailboat", "Bus", "Truck"}
+                    for _, weight in pairs(W) do Remotes.Shops.BuyItem:Fire(weight, "Weights") end
+                end
+            end)
+            task.wait(1)
+        end
+    end)
+
+    -- BUCLE 2: AUTO-LIFT AGRESIVO (0.1 seg)
     while true do
-        pcall(function()
-            -- Monitor de Stats
-            local ls = LP:FindFirstChild("leaderstats")
-            if ls then
-                MuscleLabel:SetTitle("💪 Músculo: " .. (ls:FindFirstChild("Muscle") and ls.Muscle.Value or 0))
-                StageLabel:SetTitle("🆙 Etapa: " .. (ls:FindFirstChild("Stage") and ls.Stage.Value or 0))
-                CoinsLabel:SetTitle("💰 Monedas: " .. (ls:FindFirstChild("Coins") and ls.Coins.Value or 0))
-            end
-
-            -- 2. Lógica de Auto-Levantar (SIMULACIÓN HUMANA)
-            if AutoLift then
-                pcall(function()
-                    -- 1. Iniciamos el levantamiento
-                    Remotes.Lifting.LiftingStatus:Fire(true)
-                    
-                    -- 2. SIMULACIÓN DE ESFUERZO DINÁMICO
-                    -- Si te cuesta levantarla, el servidor espera más tiempo.
-                    -- Vamos a probar con 0.5 segundos, que es un tiempo estándar de "repetición".
-                    task.wait(0.5) 
-                    
-                    -- 3. Enviamos la petición de músculo
-                    Remotes.Lifting.LiftRequest:Fire()
-                    
-                    -- 4. Mantenemos un poco más para asegurar que el servidor registre el éxito
-                    task.wait(0.1)
-                    
-                    -- 5. Terminamos la repetición (Limpieza de estado)
-                    Remotes.Lifting.LiftingStatus:Fire(false)
-                    
-                    -- 6. Pequeño descanso antes de la siguiente (Vital para que el servidor no se bloquee)
-                    task.wait(0.2)
-                end)
-            end
-
-            if AutoSell then Remotes.ClientRequests.SellMuscle:Fire() end
-            if AutoStage then Remotes.Bloodline.UpgradeRequest:Fire() end
-            
-            if AutoBuy then
-                local W = {"Stick", "Mouse", "Water", "Soccer Ball", "Bottle", "Textbook", "Bucket", "Wood", "Guitar", "Dumbbell", "Chair", "Cart", "TV", "Bicycle", "Desk", "Bed", "Log", "Canoe", "Tyre", "Refrigerator", "Drum", "Hydrant", "Piano", "Motorcycle", "Safe", "Flag", "ATM", "RX-7", "EVO", "G-Class", "Van", "Tree", "Container", "Sailboat", "Bus", "Truck"}
-                for _, weight in pairs(W) do Remotes.Shops.BuyItem:Fire(weight, "Weights") end
-            end
-        end)
+        if AutoLift then
+            pcall(function()
+                -- 1. Forzar estado de entrenamiento
+                Remotes.Lifting.LiftingStatus:Fire(true)
+                
+                -- 2. Petición de levantamiento
+                Remotes.Lifting.LiftRequest:Fire()
+                
+                -- 3. BYPASS DE STRUGGLE (Si el peso es muy alto, esto lo salta)
+                if Remotes.Lifting:FindFirstChild("StruggleRemote") then
+                    Remotes.Lifting.StruggleRemote:Fire()
+                end
+                
+                -- 4. Reset rápido para la siguiente repetición
+                task.wait(0.05)
+                Remotes.Lifting.LiftingStatus:Fire(false)
+            end)
+        end
         task.wait(0.1)
     end
 end)
