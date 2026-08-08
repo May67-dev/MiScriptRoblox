@@ -164,43 +164,47 @@ SisTab:Button({ Title = "Cerrar NC HUB", Callback = function() Window:Destroy() 
 
 -- ==========================================
 -- 🏁 LÓGICA MAESTRA DE EJECUCIÓN
--- ==========================================
 task.spawn(function()
     local Remotes = require(game:GetService("ReplicatedStorage").Shared.Remotes)
     
     while true do
         pcall(function()
-            -- 1. AUTO LIFT (BYPASS LOOP)
+            -- >>> AQUÍ ESTÁ EL CAMBIO PARA EL AUTO-LIFT <<<
             if AutoLift then
+                -- 1. Abrimos la repetición
                 Remotes.Lifting.LiftingStatus:Fire(true)
-                task.wait(0.05)
+                task.wait(0.15) 
+                
+                -- 2. Pedimos el músculo
                 Remotes.Lifting.LiftRequest:Fire()
-                -- Bypass Struggle si existe
-                if Remotes.Lifting:FindFirstChild("StruggleRemote") then Remotes.Lifting.StruggleRemote:Fire() end
-                task.wait(0.05)
+                
+                -- 3. Bypass de Struggle (si existe)
+                if Remotes.Lifting:FindFirstChild("StruggleRemote") then 
+                    Remotes.Lifting.StruggleRemote:Fire() 
+                end
+                task.wait(0.1)
+                
+                -- 4. CERRAMOS la repetición (Esto libera el bloqueo)
                 Remotes.Lifting.LiftingStatus:Fire(false)
+                task.wait(0.1)
             end
-            
-            -- 2. AUTO SELL & STAGE
+            -- >>> FIN DEL CAMBIO <<<
+
             if AutoSell then Remotes.ClientRequests.SellMuscle:Fire() end
             if AutoStage then Remotes.Bloodline.UpgradeRequest:Fire() end
             
-            -- 3. AUTO BUY WEIGHTS
             if AutoBuy then
                 for _, w in pairs(WeightsList) do Remotes.Shops.BuyItem:Fire(w, "Weights") end
             end
             
-            -- 4. AUTO EGG
             if AutoEgg then Remotes.Shops.OpenEgg:Fire(SelectedEgg) end
             
-            -- 5. NOCLIP
             if Noclip and LP.Character then
                 for _, v in pairs(LP.Character:GetDescendants()) do
                     if v:IsA("BasePart") then v.CanCollide = false end
                 end
             end
             
-            -- 6. SPEED MAINTENANCE
             SafeSpeed()
         end)
         task.wait(0.1)
