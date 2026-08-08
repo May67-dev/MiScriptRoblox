@@ -99,9 +99,9 @@ end
 -- 6. JUGADOR (HACKS & ANTI-AFK)
 local PlayerTab = SeccionPlayer:Tab({ Title = "Hacks", Icon = "solar:ghost-bold" })
 PlayerTab:Slider({
-    Title = "Velocidad de Caminado",
+    Title = "Velocidad",
     Step = 1,
-    Value = { Min = 16, Max = 300, Default = 16 },
+    Value = { Min = 16, Max = 256, Default = 16 },
     Callback = function(v) 
         VelocidadUsuario = v 
         ApplySpeed()
